@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Quiz App</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      display: flex;
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+    .left {
+      width: 60%;
+      height: 100vh;
+      overflow-y: scroll;
+      padding: 20px;
+      border-right: 1px solid #ccc;
+    }
+    .right {
+      width: 40%;
+      padding: 20px;
+      position: relative;
+    }
+    .question {
+      margin-bottom: 20px;
+    }
+    .question label {
+      margin-right: 10px;
+    }
+    .bubble {
+      display: flex;
+      align-items: center;
+      margin-bottom: 5px;
+    }
+    .bubble span {
+      display: inline-block;
+      width: 14px;
+      height: 14px;
+      border: 1px solid black;
+      border-radius: 50%;
+      margin: 0 3px;
+    }
+    .filled {
+      background-color: black;
+    }
+    #bubbleWrapper {
+    display: flex;
+  justify-content: center;  /* center the columns horizontally */
+  gap: 30px;
+  margin: 20px 0;
+}
+
+    input[type="text"] {
+      width: 100%;
+      margin-bottom: 10px;
+      padding: 5px;
+    }
+    #submitBtn {
+      display: block;
+      margin: 20px auto; /* auto margins center it horizontally */
+      padding: 10px 20px;
+      background-color: green;
+      color: white;
+      font-size: 16px;
+      border: none;
+      cursor: pointer;
+    }
+    #scoreSummary {
+      margin-top: 20px;
+      font-weight: bold;
+    }
+    /* Timer Styles */
+    #timerContainer {
+      width: 120px;
+      height: 120px;
+      margin: 0 auto 20px;
+      position: relative;
+    }
+    #timerCircle {
+      width: 100%;
+      height: 100%;
+      transform: rotate(-90deg);
+    }
+    #timerCircle circle {
+      fill: none;
+      stroke-width: 10;
+    }
+    #bgCircle {
+      stroke: #eee;
+    }
+    #progressCircle {
+      stroke: red;
+      stroke-linecap: round;
+      transition: stroke-dashoffset 1s linear;
+    }
+    #timerText {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-weight: bold;
+      font-size: 18px;
+      color: red;
+    }
+    #bubbleCol1, #bubbleCol2 {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+  </style>
+</head>
+<body>
+
+<!-- Background Music -->
+<audio id="bg-music" loop>
+  <source src="congrats.mp3" type="audio/mpeg">
+  Your browser does not support the audio element.
+</audio>
+
+<!-- Left Panel -->
+<div class="left" id="questionContainer">
+    <h1>Programming Language Reviewer</h1>
+    <h3>Type in your name, section and subject to view summary after submitting</h3>
+</div>
+
+<!-- Right Panel -->
+<div class="right">
+  <div id="timerContainer">
+    <svg id="timerCircle" viewBox="0 0 100 100">
+      <circle id="bgCircle" cx="50" cy="50" r="45"></circle>
+      <circle id="progressCircle" cx="50" cy="50" r="45" stroke-dasharray="282.6" stroke-dashoffset="0"></circle>
+    </svg>
+    <div id="timerText">30:00</div>
+  </div>
+
+  <input type="text" id="name" placeholder="NAME">
+  <input type="text" id="section" placeholder="SECTION">
+  <input type="text" id="subject" placeholder="SUBJECT">
+
+  <div id="bubbleWrapper">
+    <div id="bubbleCol1"></div>
+    <div id="bubbleCol2"></div>
+  </div>
+
+  <button id="submitBtn">SUBMIT</button>
+  <div id="scoreSummary"></div>
+</div>
+
+<script>
+const questions = [
+  // Module 1: Data Types
+  {
+    question: "What is an integer in Python?",
+    choices: { a: "A number with a decimal point", b: "A string", c: "A number without a fractional part", d: "A Boolean value" },
+    answer: "c"
+  },
+  {
+    question: "Which character can be used in Python to make large numbers more readable?",
+    choices: { a: ",", b: "_", c: ".", d: ";" },
+    answer: "b"
+  },
+  {
+    question: "How is a negative integer represented in Python?",
+    choices: { a: "With parentheses", b: "With a backslash", c: "With a minus sign", d: "With a caret" },
+    answer: "c"
+  },
+  {
+    question: "What does the prefix '0o' or '0O' represent in Python?",
+    choices: { a: "Hexadecimal", b: "Binary", c: "Octal", d: "Float" },
+    answer: "c"
+  },
+  {
+    question: "How does Python interpret '0x123'?",
+    choices: { a: "Decimal 123", b: "Octal 123", c: "Hexadecimal 123", d: "Binary 123" },
+    answer: "c"
+  },
+  {
+    question: "Which of the following is a valid float?",
+    choices: { a: "1,000.0", b: "4.5", c: "4,5", d: "4:5" },
+    answer: "b"
+  },
+  {
+    question: "Which notation uses 'E' or 'e' to represent exponents?",
+    choices: { a: "Integer", b: "String", c: "Scientific", d: "Boolean" },
+    answer: "c"
+  },
+  {
+    question: "What does the float literal '1e-22' represent?",
+    choices: { a: "100", b: "A very small number", c: "Zero", d: "A negative integer" },
+    answer: "b"
+  },
+  {
+    question: "Which of the following is a valid string in Python?",
+    choices: { a: "Hello", b: "'Hello'", c: "Hello'", d: 'Hello"' },
+    answer: "b"
+  },
+  {
+    question: "What is the escape character in Python?",
+    choices: { a: "/", b: "&", c: "\\", d: "|" },
+    answer: "c"
+  },
+  {
+    question: "Which of the following is valid for embedding quotes in a string?",
+    choices: { a: "'He said \"Hi\"'", b: '"He said "Hi""', c: '"He said \\"Hi\\""', d: "Both a and c" },
+    answer: "d"
+  },
+  {
+    question: "What values does the Boolean type represent?",
+    choices: { a: "0 and 1", b: "Yes and No", c: "True and False", d: "Both a and c" },
+    answer: "d"
+  },
+  {
+    question: "Which of the following is a Boolean expression result?",
+    choices: { a: "3", b: "'True'", c: "False", d: "None" },
+    answer: "c"
+  },
+  {
+    question: "Who developed Boolean algebra?",
+    choices: { a: "George Boole", b: "Alan Turing", c: "Guido van Rossum", d: "Isaac Newton" },
+    answer: "a"
+  },
+  {
+    question: "Which statement is true about Boolean values in Python?",
+    choices: { a: "They are case-insensitive", b: "They can be redefined", c: "They are case-sensitive", d: "They must be imported" },
+    answer: "c"
+  },
+
+  // Module 2: Expressions and Assignment Statements
+  {
+    question: "What is an expression in Python?",
+    choices: { a: "A function", b: "A data type", c: "A combination of values and operators that results in a value", d: "A string" },
+    answer: "c"
+  },
+  {
+    question: "What operator is used for assignment in Python?",
+    choices: { a: "==", b: "=>", c: "=", d: ":" },
+    answer: "c"
+  },
+  {
+    question: "What does 'x = 10 + 5' represent?",
+    choices: { a: "Function definition", b: "An invalid expression", c: "Assignment of an expression result to a variable", d: "Loop" },
+    answer: "c"
+  },
+  {
+    question: "Which of the following is a relational operator?",
+    choices: { a: "+", b: "==", c: "&", d: "not" },
+    answer: "b"
+  },
+  {
+    question: "What is the output of (10 + 5) * 2 - 3 / 1.5?",
+    choices: { a: "27.0", b: "28", c: "25", d: "None" },
+    answer: "a"
+  },
+  {
+    question: "Which operator represents exponentiation in Python?",
+    choices: { a: "^", b: "**", c: "^^", d: "%" },
+    answer: "b"
+  },
+  {
+    question: "What is the result of: print(10 > 5)?",
+    choices: { a: "5", b: "True", c: "False", d: "Error" },
+    answer: "b"
+  },
+  {
+    question: "What is the output of: (5 > 3) and (10 > 8)?",
+    choices: { a: "False", b: "True", c: "None", d: "Error" },
+    answer: "b"
+  },
+  {
+    question: "Which operator is used for bitwise AND?",
+    choices: { a: "&&", b: "|", c: "&", d: "^" },
+    answer: "c"
+  },
+  {
+    question: "Which assignment operator adds and assigns the value in one step?",
+    choices: { a: "++", b: "+=", c: "=+", d: ":=" },
+    answer: "b"
+  },
+  {
+    question: "What is the result of 'x *= 2' when x is initially 10?",
+    choices: { a: "20", b: "30", c: "10", d: "5" },
+    answer: "a"
+  },
+  {
+    question: "What does the bitwise OR operator '|' do?",
+    choices: { a: "Adds values", b: "Compares values", c: "Performs OR at binary level", d: "Checks identity" },
+    answer: "c"
+  },
+  {
+    question: "What is the output of x = 10; x += 3; print(x)?",
+    choices: { a: "13", b: "10", c: "3", d: "30" },
+    answer: "a"
+  },
+  {
+    question: "Which of the following is used to perform logical negation?",
+    choices: { a: "&", b: "!", c: "not", d: "~" },
+    answer: "c"
+  },
+  {
+    question: "How do you swap two values in Python?",
+    choices: { a: "x, y = y, x", b: "temp = x; x = y; y = temp", c: "Both a and b", d: "x = y" },
+    answer: "c"
+  }
+];
+
+
+  const questionContainer = document.getElementById("questionContainer");
+  const bubbleCol1 = document.getElementById("bubbleCol1");
+  const bubbleCol2 = document.getElementById("bubbleCol2");
+  const correctAnswers = {};
+  const totalQuestions = questions.length;
+
+  questions.forEach((q, i) => {
+    const num = i + 1;
+    correctAnswers[num] = q.answer;
+
+    const qDiv = document.createElement("div");
+    qDiv.className = "question";
+    qDiv.innerHTML = `
+      <strong>${num}. ${q.question}</strong><br>
+      <label><input type="radio" name="q${num}" value="a" onclick="markBubble(${num}, 'a')"> ${q.choices.a}</label>
+      <label><input type="radio" name="q${num}" value="b" onclick="markBubble(${num}, 'b')"> ${q.choices.b}</label>
+      <label><input type="radio" name="q${num}" value="c" onclick="markBubble(${num}, 'c')"> ${q.choices.c}</label>
+      <label><input type="radio" name="q${num}" value="d" onclick="markBubble(${num}, 'd')"> ${q.choices.d}</label>
+    `;
+    questionContainer.appendChild(qDiv);
+
+    const bubbleRow = document.createElement("div");
+    bubbleRow.className = "bubble";
+    bubbleRow.innerHTML = `
+      ${num}.
+      <span id="b${num}a"></span>
+      <span id="b${num}b"></span>
+      <span id="b${num}c"></span>
+      <span id="b${num}d"></span>
+    `;
+    (num <= 15 ? bubbleCol1 : bubbleCol2).appendChild(bubbleRow);
+  });
+
+  function markBubble(qNum, choice) {
+    ['a', 'b', 'c', 'd'].forEach(letter => {
+      const el = document.getElementById(`b${qNum}${letter}`);
+      el.classList.remove('filled');
+    });
+    const selected = document.getElementById(`b${qNum}${choice}`);
+    if (selected) selected.classList.add('filled');
+  }
+
+  // Timer Logic
+  const totalTime = 10 * 60; // 30 minutes in seconds
+  let timeLeft = totalTime;
+  const timerText = document.getElementById("timerText");
+  const progressCircle = document.getElementById("progressCircle");
+  const radius = 45;
+  const circumference = 2 * Math.PI * radius;
+  progressCircle.style.strokeDasharray = circumference;
+
+  function updateTimer() {
+    const minutes = Math.floor(timeLeft / 60);
+    const seconds = timeLeft % 60;
+    timerText.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+    const offset = circumference - (timeLeft / totalTime) * circumference;
+    progressCircle.style.strokeDashoffset = offset;
+  }
+
+  const timerInterval = setInterval(() => {
+    updateTimer();
+    if (timeLeft <= 0) {
+      clearInterval(timerInterval);
+      alert("Time is up! Submitting your quiz.");
+      document.getElementById("submitBtn").click();
+      document.getElementById("submitBtn").disabled = true;
+    }
+    timeLeft--;
+  }, 1000);
+
+  // Submit logic
+  document.getElementById("submitBtn").addEventListener("click", () => {
+    const name = document.getElementById("name").value.trim();
+    const section = document.getElementById("section").value.trim();
+    const subject = document.getElementById("subject").value.trim();
+
+    const music = document.getElementById("bg-music");
+    if (music.paused) {
+      music.play().catch(err => {
+        console.warn("Autoplay was blocked:", err);
+      });
+    }
+
+    if (!name || !section || !subject) {
+      alert("Please fill in Name, Section, and Subject.");
+      return;
+    }
+
+    let correct = 0, wrong = 0, unanswered = 0, feedback = "";
+
+    for (let i = 1; i <= totalQuestions; i++) {
+      const selected = document.querySelector(`input[name="q${i}"]:checked`);
+      if (selected) {
+        if (selected.value === correctAnswers[i]) {
+          correct++;
+        } else {
+          wrong++;
+          feedback += `❌ Q${i} (Your answer: ${selected.value}, Correct: ${correctAnswers[i]})<br>`;
+        }
+      } else {
+        unanswered++;
+        feedback += `⚠️ Q${i} was not answered (Correct: ${correctAnswers[i]})<br>`;
+      }
+    }
+
+    const summary = `
+      <p><strong>Name:</strong> ${name}</p>
+      <p><strong>Section:</strong> ${section}</p>
+      <p><strong>Subject:</strong> ${subject}</p>
+      <p><strong>Score:</strong> ${correct}/${totalQuestions}</p>
+      <p><strong>Correct:</strong> ${correct}</p>
+      <p><strong>Wrong:</strong> ${wrong}</p>
+      <p><strong>Unanswered:</strong> ${unanswered}</p>
+      <hr>
+      <div>${feedback}</div>
+    `;
+
+    document.getElementById("scoreSummary").innerHTML = summary;
+  });
+
+  updateTimer(); // Initialize timer immediately
+</script>
+
+</body>
+</html>

@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Quiz App</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      display: flex;
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+    .left {
+      width: 60%;
+      height: 100vh;
+      overflow-y: scroll;
+      padding: 20px;
+      border-right: 1px solid #ccc;
+    }
+    .right {
+      width: 40%;
+      padding: 20px;
+      position: relative;
+    }
+    .question {
+      margin-bottom: 20px;
+    }
+    .question label {
+      margin-right: 10px;
+    }
+    .bubble {
+      display: flex;
+      align-items: center;
+      margin-bottom: 5px;
+    }
+    .bubble span {
+      display: inline-block;
+      width: 14px;
+      height: 14px;
+      border: 1px solid black;
+      border-radius: 50%;
+      margin: 0 3px;
+    }
+    .filled {
+      background-color: black;
+    }
+    #bubbleWrapper {
+    display: flex;
+  justify-content: center;  /* center the columns horizontally */
+  gap: 30px;
+  margin: 20px 0;
+}
+
+    input[type="text"] {
+      width: 100%;
+      margin-bottom: 10px;
+      padding: 5px;
+    }
+    #submitBtn {
+      display: block;
+      margin: 20px auto; /* auto margins center it horizontally */
+      padding: 10px 20px;
+      background-color: green;
+      color: white;
+      font-size: 16px;
+      border: none;
+      cursor: pointer;
+    }
+    #scoreSummary {
+      margin-top: 20px;
+      font-weight: bold;
+    }
+    /* Timer Styles */
+    #timerContainer {
+      width: 120px;
+      height: 120px;
+      margin: 0 auto 20px;
+      position: relative;
+    }
+    #timerCircle {
+      width: 100%;
+      height: 100%;
+      transform: rotate(-90deg);
+    }
+    #timerCircle circle {
+      fill: none;
+      stroke-width: 10;
+    }
+    #bgCircle {
+      stroke: #eee;
+    }
+    #progressCircle {
+      stroke: red;
+      stroke-linecap: round;
+      transition: stroke-dashoffset 1s linear;
+    }
+    #timerText {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-weight: bold;
+      font-size: 18px;
+      color: red;
+    }
+    #bubbleCol1, #bubbleCol2 {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+  </style>
+</head>
+<body>
+
+<!-- Background Music -->
+<audio id="bg-music" loop>
+  <source src="congrats.mp3" type="audio/mpeg">
+  Your browser does not support the audio element.
+</audio>
+
+<!-- Left Panel -->
+<div class="left" id="questionContainer">
+    <h1>Websys Reviewer</h1>
+    <h3>Type in your name, section and subject to view summary after submitting</h3>
+</div>
+
+<!-- Right Panel -->
+<div class="right">
+  <div id="timerContainer">
+    <svg id="timerCircle" viewBox="0 0 100 100">
+      <circle id="bgCircle" cx="50" cy="50" r="45"></circle>
+      <circle id="progressCircle" cx="50" cy="50" r="45" stroke-dasharray="282.6" stroke-dashoffset="0"></circle>
+    </svg>
+    <div id="timerText">30:00</div>
+  </div>
+
+  <input type="text" id="name" placeholder="NAME">
+  <input type="text" id="section" placeholder="SECTION">
+  <input type="text" id="subject" placeholder="SUBJECT">
+
+  <div id="bubbleWrapper">
+    <div id="bubbleCol1"></div>
+    <div id="bubbleCol2"></div>
+  </div>
+
+  <button id="submitBtn">SUBMIT</button>
+  <div id="scoreSummary"></div>
+</div>
+
+<script>
+const questions = [
+  {
+    question: "What is the main purpose of using functions in JavaScript?",
+    choices: { a: "To increase the length of the program", b: "To perform random operations", c: "To divide code into logically independent parts", d: "To slow down execution" },
+    answer: "c"
+  },
+  {
+    question: "How do you declare a function in JavaScript?",
+    choices: { a: "function = myFunction()", b: "declare function myFunction {}", c: "function myFunction() {}", d: "func myFunction()" },
+    answer: "c"
+  },
+  {
+    question: "What keyword is used to terminate a function and optionally return a value?",
+    choices: { a: "end", b: "break", c: "return", d: "stop" },
+    answer: "c"
+  },
+  {
+    question: "What is the output of the showMsg() function in the example?",
+    choices: { a: "message 1 and message 2", b: "message 2", c: "message 1", d: "No output" },
+    answer: "c"
+  },
+  {
+    question: "What is the purpose of the return value in a function?",
+    choices: { a: "To make the function infinite", b: "To pass a value back to the place where the function was called", c: "To pause the program", d: "To print values to the console" },
+    answer: "b"
+  },
+  {
+    question: "What is the scope of a variable declared inside a function?",
+    choices: { a: "Global", b: "Infinite", c: "Local", d: "Temporary global" },
+    answer: "c"
+  },
+  {
+    question: "Which line simplifies the function getMeanTemp() the most?",
+    choices: { a: "return temperatures.length / sum;", b: "return sum / temperatures.length;", c: "console.log(sum / temperatures.length);", d: "meanTemp = sum / temperatures.length;" },
+    answer: "b"
+  },
+  {
+    question: "What are function parameters?",
+    choices: { a: "Variables used only in loops", b: "Names given to functions", c: "Names separated by commas inside the function parentheses", d: "Values returned by a function" },
+    answer: "c"
+  },
+  {
+    question: "What are the values called that are passed into a function when it is called?",
+    choices: { a: "Parameters", b: "Return values", c: "Functions", d: "Arguments" },
+    answer: "d"
+  },
+  {
+    question: "Which of the following correctly passes an array to the getMeanTemp function?",
+    choices: { a: "getMeanTemp = day1", b: "console.log(getMeanTemp = day1)", c: "console.log(getMeanTemp(day1))", d: "meanTemp(getMeanTemp, day1)" },
+    answer: "c"
+  },
+  {
+    question: "Which type of error occurs when the code is ill-formed or contains typos, like unmatched brackets?",
+    choices: { a: "ReferenceError", b: "TypeError", c: "SyntaxError", d: "RangeError" },
+    answer: "c"
+  },
+  {
+    question: "What kind of error is thrown when a variable or function is used without being declared?",
+    choices: { a: "SyntaxError", b: "TypeError", c: "RangeError", d: "ReferenceError" },
+    answer: "d"
+  },
+  {
+    question: "What is the result of trying to assign a new value to a constant variable?",
+    choices: { a: "ReferenceError", b: "SyntaxError", c: "TypeError", d: "RangeError" },
+    answer: "c"
+  },
+  {
+    question: "What type of error occurs when a value is outside the acceptable limits for a function?",
+    choices: { a: "RangeError", b: "SyntaxError", c: "TypeError", d: "LogicalError" },
+    answer: "a"
+  },
+  {
+    question: "Which JavaScript construct is used to handle exceptions during program execution?",
+    choices: { a: "try...final", b: "if...else", c: "try...catch", d: "switch...case" },
+    answer: "c"
+  },
+  {
+    question: "What is the purpose of the `finally` block in a try-catch-finally structure?",
+    choices: { a: "It catches errors", b: "It runs only if there is an error", c: "It always runs after try and catch blocks", d: "It prevents errors from occurring" },
+    answer: "c"
+  },
+  {
+    question: "What JavaScript statement is used to pause code execution for debugging purposes?",
+    choices: { a: "pause;", b: "halt;", c: "debugger;", d: "breakpoint;" },
+    answer: "c"
+  },
+  {
+    question: "Which debugging action continues execution to the next breakpoint?",
+    choices: { a: "Step Into", b: "Step Over", c: "Step Out", d: "Resume" },
+    answer: "d"
+  },
+  {
+    question: "Which debugging action allows the programmer to jump into a function call?",
+    choices: { a: "Step Over", b: "Step Into", c: "Step Out", d: "Pause" },
+    answer: "b"
+  },
+  {
+    question: "What type of error is demonstrated when a number is used as if it had a length property?",
+    choices: { a: "SyntaxError", b: "ReferenceError", c: "RangeError", d: "TypeError" },
+    answer: "d"
+  },
+
+  // Additional 10 questions
+  {
+    question: "What is the term for errors that occur while the script is running?",
+    choices: { a: "Runtime errors", b: "Syntax errors", c: "Compile-time errors", d: "Declaration errors" },
+    answer: "a"
+  },
+  {
+    question: "Which method is commonly used to output debug information in JavaScript?",
+    choices: { a: "console.write()", b: "alert()", c: "document.write()", d: "console.log()" },
+    answer: "d"
+  },
+  {
+    question: "Where can you find detailed error messages when debugging JavaScript in a browser?",
+    choices: { a: "Terminal", b: "Console tab in Developer Tools", c: "Network tab", d: "Page source" },
+    answer: "b"
+  },
+  {
+    question: "What will `typeof null` return in JavaScript?",
+    choices: { a: "null", b: "undefined", c: "object", d: "function" },
+    answer: "c"
+  },
+  {
+    question: "Which tool allows you to pause code execution on specific lines in the browser?",
+    choices: { a: "Breakpoints", b: "Anchors", c: "Watchers", d: "Scopes" },
+    answer: "a"
+  },
+  {
+    question: "Which keyword defines a variable whose value can’t be reassigned?",
+    choices: { a: "let", b: "const", c: "var", d: "define" },
+    answer: "b"
+  },
+  {
+    question: "Which error is caused when trying to access a method that doesn’t exist on a value?",
+    choices: { a: "SyntaxError", b: "ReferenceError", c: "TypeError", d: "NullError" },
+    answer: "c"
+  },
+  {
+    question: "How can you view the call stack when debugging?",
+    choices: { a: "Open call-stack viewer tab", b: "Use `stack.trace()`", c: "Check Console log", d: "Look in the Sources tab > Call Stack" },
+    answer: "d"
+  },
+  {
+    question: "What does `NaN` stand for in JavaScript?",
+    choices: { a: "No available Number", b: "Not a Number", c: "Null and None", d: "Named and Numbered" },
+    answer: "b"
+  },
+  {
+    question: "Which feature lets you track how a variable's value changes during execution?",
+    choices: { a: "Breakpoints", b: "Step Into", c: "Watch Expressions", d: "Memory Snapshots" },
+    answer: "c"
+  }
+];
+
+
+  const questionContainer = document.getElementById("questionContainer");
+  const bubbleCol1 = document.getElementById("bubbleCol1");
+  const bubbleCol2 = document.getElementById("bubbleCol2");
+  const correctAnswers = {};
+  const totalQuestions = questions.length;
+
+  questions.forEach((q, i) => {
+    const num = i + 1;
+    correctAnswers[num] = q.answer;
+
+    const qDiv = document.createElement("div");
+    qDiv.className = "question";
+    qDiv.innerHTML = `
+      <strong>${num}. ${q.question}</strong><br>
+      <label><input type="radio" name="q${num}" value="a" onclick="markBubble(${num}, 'a')"> ${q.choices.a}</label>
+      <label><input type="radio" name="q${num}" value="b" onclick="markBubble(${num}, 'b')"> ${q.choices.b}</label>
+      <label><input type="radio" name="q${num}" value="c" onclick="markBubble(${num}, 'c')"> ${q.choices.c}</label>
+      <label><input type="radio" name="q${num}" value="d" onclick="markBubble(${num}, 'd')"> ${q.choices.d}</label>
+    `;
+    questionContainer.appendChild(qDiv);
+
+    const bubbleRow = document.createElement("div");
+    bubbleRow.className = "bubble";
+    bubbleRow.innerHTML = `
+      ${num}.
+      <span id="b${num}a"></span>
+      <span id="b${num}b"></span>
+      <span id="b${num}c"></span>
+      <span id="b${num}d"></span>
+    `;
+    (num <= 15 ? bubbleCol1 : bubbleCol2).appendChild(bubbleRow);
+  });
+
+  function markBubble(qNum, choice) {
+    ['a', 'b', 'c', 'd'].forEach(letter => {
+      const el = document.getElementById(`b${qNum}${letter}`);
+      el.classList.remove('filled');
+    });
+    const selected = document.getElementById(`b${qNum}${choice}`);
+    if (selected) selected.classList.add('filled');
+  }
+
+  // Timer Logic
+  const totalTime = 10 * 60; // 30 minutes in seconds
+  let timeLeft = totalTime;
+  const timerText = document.getElementById("timerText");
+  const progressCircle = document.getElementById("progressCircle");
+  const radius = 45;
+  const circumference = 2 * Math.PI * radius;
+  progressCircle.style.strokeDasharray = circumference;
+
+  function updateTimer() {
+    const minutes = Math.floor(timeLeft / 60);
+    const seconds = timeLeft % 60;
+    timerText.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+    const offset = circumference - (timeLeft / totalTime) * circumference;
+    progressCircle.style.strokeDashoffset = offset;
+  }
+
+  const timerInterval = setInterval(() => {
+    updateTimer();
+    if (timeLeft <= 0) {
+      clearInterval(timerInterval);
+      alert("Time is up! Submitting your quiz.");
+      document.getElementById("submitBtn").click();
+      document.getElementById("submitBtn").disabled = true;
+    }
+    timeLeft--;
+  }, 1000);
+
+  // Submit logic
+  document.getElementById("submitBtn").addEventListener("click", () => {
+    const name = document.getElementById("name").value.trim();
+    const section = document.getElementById("section").value.trim();
+    const subject = document.getElementById("subject").value.trim();
+
+    const music = document.getElementById("bg-music");
+    if (music.paused) {
+      music.play().catch(err => {
+        console.warn("Autoplay was blocked:", err);
+      });
+    }
+
+    if (!name || !section || !subject) {
+      alert("Please fill in Name, Section, and Subject.");
+      return;
+    }
+
+    let correct = 0, wrong = 0, unanswered = 0, feedback = "";
+
+    for (let i = 1; i <= totalQuestions; i++) {
+      const selected = document.querySelector(`input[name="q${i}"]:checked`);
+      if (selected) {
+        if (selected.value === correctAnswers[i]) {
+          correct++;
+        } else {
+          wrong++;
+          feedback += `❌ Q${i} (Your answer: ${selected.value}, Correct: ${correctAnswers[i]})<br>`;
+        }
+      } else {
+        unanswered++;
+        feedback += `⚠️ Q${i} was not answered (Correct: ${correctAnswers[i]})<br>`;
+      }
+    }
+
+    const summary = `
+      <p><strong>Name:</strong> ${name}</p>
+      <p><strong>Section:</strong> ${section}</p>
+      <p><strong>Subject:</strong> ${subject}</p>
+      <p><strong>Score:</strong> ${correct}/${totalQuestions}</p>
+      <p><strong>Correct:</strong> ${correct}</p>
+      <p><strong>Wrong:</strong> ${wrong}</p>
+      <p><strong>Unanswered:</strong> ${unanswered}</p>
+      <hr>
+      <div>${feedback}</div>
+    `;
+
+    document.getElementById("scoreSummary").innerHTML = summary;
+  });
+
+  updateTimer(); // Initialize timer immediately
+</script>
+
+</body>
+</html>
