@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Quiz App</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      display: flex;
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+    .left {
+      width: 60%;
+      height: 100vh;
+      overflow-y: scroll;
+      padding: 20px;
+      border-right: 1px solid #ccc;
+    }
+    .right {
+      width: 40%;
+      padding: 20px;
+      position: relative;
+    }
+    .question {
+      margin-bottom: 20px;
+    }
+    .question label {
+      margin-right: 10px;
+    }
+    .bubble {
+      display: flex;
+      align-items: center;
+      margin-bottom: 5px;
+    }
+    .bubble span {
+      display: inline-block;
+      width: 14px;
+      height: 14px;
+      border: 1px solid black;
+      border-radius: 50%;
+      margin: 0 3px;
+    }
+    .filled {
+      background-color: black;
+    }
+    #bubbleWrapper {
+    display: flex;
+    justify-content: center;  /* center the columns horizontally */
+    gap: 30px;
+    margin: 20px 0;
+}
+
+    input[type="text"] {
+      width: 100%;
+      margin-bottom: 10px;
+      padding: 5px;
+    }
+    #submitBtn {
+      display: block;
+      margin: 20px auto; /* auto margins center it horizontally */
+      padding: 10px 20px;
+      background-color: green;
+      color: white;
+      font-size: 16px;
+      border: none;
+      cursor: pointer;
+    }
+    #scoreSummary {
+      margin-top: 20px;
+      font-weight: bold;
+    }
+    /* Timer Styles */
+    #timerContainer {
+      width: 120px;
+      height: 120px;
+      margin: 0 auto 20px;
+      position: relative;
+    }
+    #timerCircle {
+      width: 100%;
+      height: 100%;
+      transform: rotate(-90deg);
+    }
+    #timerCircle circle {
+      fill: none;
+      stroke-width: 10;
+    }
+    #bgCircle {
+      stroke: #eee;
+    }
+    #progressCircle {
+      stroke: red;
+      stroke-linecap: round;
+      transition: stroke-dashoffset 1s linear;
+    }
+    #timerText {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-weight: bold;
+      font-size: 18px;
+      color: red;
+    }
+    #bubbleCol1, #bubbleCol2 {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+  </style>
+</head>
+<body>
+
+<!-- Background Music -->
+<audio id="bg-music" loop>
+  <source src="congrats.mp3" type="audio/mpeg">
+  Your browser does not support the audio element.
+</audio>
+
+<!-- Left Panel -->
+<div class="left" id="questionContainer">
+    <h1>GreatBooks Reviewer</h1>
+    <h3>Type in your name, section and subject to view summary after submitting</h3>
+</div>
+
+<!-- Right Panel -->
+<div class="right">
+  <div id="timerContainer">
+    <svg id="timerCircle" viewBox="0 0 100 100">
+      <circle id="bgCircle" cx="50" cy="50" r="45"></circle>
+      <circle id="progressCircle" cx="50" cy="50" r="45" stroke-dasharray="282.6" stroke-dashoffset="0"></circle>
+    </svg>
+    <div id="timerText">30:00</div>
+  </div>
+
+  <input type="text" id="name" placeholder="NAME">
+  <input type="text" id="section" placeholder="SECTION">
+  <input type="text" id="subject" placeholder="SUBJECT">
+
+  <div id="bubbleWrapper">
+    <div id="bubbleCol1"></div>
+    <div id="bubbleCol2"></div>
+  </div>
+
+  <button id="submitBtn">SUBMIT</button>
+  <div id="scoreSummary"></div>
+</div>
+
+<script>
+  const questions = [
+    {
+      question: "The vast majority of texts are written for one or more of these three purposes, except",
+      choices: { a: "To make an argument", b: "To inform", c: "To tell a story", d: "To understand and analyze" },
+      answer: "d"
+    },
+    {
+      question: "Alice's Adventures in Wonderland is written by ___",
+      choices: { a: "Lewis Carroll", b: "Francois Rabelais", c: "James Joyce", d: "Jorge Luis" },
+      answer: "a"
+    },
+    {
+      question: "Beethoven has a much more fiery personality. Whereas Mozart's music is clean and precise, Beethoven employs many surprises in his music. Many times he will build up the music as if it’s leading to something only to suddenly get soft – his trademark use of subito piano",
+      choices: { a: "Description", b: "Sequence", c: "Cause/Effect", d: "Compare/Contrast" },
+      answer: "d"
+    },
+    {
+      question: "Two distinct desert ecosystems, the Mojave and the Colorado, come together in Joshua Tree National Park. A fascinating variety of plants and animals make their homes in a land sculpted by strong winds and occasional torrents of rain. Dark night skies, a rich cultural history, and surreal geologic features add to the wonder of this vast wilderness in southern California",
+      choices: { a: "Description", b: "Sequence", c: "Cause/Effect", d: "Compare/Contrast" },
+      answer: "a"
+    },
+    {
+      question: "After inflating, the universe slowed down its expansion rate but continued to grow, as it does still. It also cooled significantly, allowing for the formation of matter — first neutrinos, electrons, quarks, and photons, followed by protons and neutrons",
+      choices: { a: "Description", b: "Sequence", c: "Cause/Effect", d: "Compare/Contrast" },
+      answer: "c"
+    },
+    {
+      question: "World War I, also known as the Great War, began in 1914 after the assassination of Archduke Franz Ferdinand of Austria. His murder catapulted into a war across Europe that lasted until 1918",
+      choices: { a: "Description", b: "Sequence", c: "Cause/Effect", d: "Compare/Contrast" },
+      answer: "b"
+    },
+    {
+      question: "The Pioneers, the first of James Fenimore Cooper's saga, the “Leatherstocking Tales,” offers conflicting views of life on the frontier in one of the first original US novels.",
+      choices: { a: "1823", b: "1852", c: "1896", d: "1939" },
+      answer: "a"
+    },
+    {
+      question: "In The Country of the Pointed Firs, Sarah Orne Jewett vividly describes life in an isolated fishing village on the Maine coast..",
+      choices: { a: "1823", b: "1852", c: "1896", d: "1939" },
+      answer: "c"
+    },
+    {
+      question: "In the story, seven-year-old Alice falls down a ___ hole and finds herself in a surreal universe.",
+      choices: { a: "rabbit", b: "deep", c: "warp", d: "raccoon" },
+      answer: "a"
+    },
+    {
+      question: "she wonders if she is going to the land in the ___ and imagines herself appearing ignorant when she has to ask whether she is in Australia or New Zealand.",
+      choices: { a: "Animus", b: "Rancor", c: "Enmity", d: "Antipathies" },
+      answer: "d"
+    },
+    {
+      question: "best known later by his pen name, Lewis Carrol",
+      choices: { a: "Charles Dodgson", b: "Dorling Kindersley", c: "Samuel Langhorne Clemens", d: "James Fenimore" },
+      answer: "a"
+    },
+     {
+      question: " Alice's Adventures in Wonderland was the most popular children's book in Britain. Queen ___ was one of its admirers.",
+      choices: { a: "Elizabeth", b: "Victoria", c: "Diana", d: "Analiza" },
+      answer: "b"
+    },
+    {
+      question: "The Adventures of Huckleberry Finn is written by ___",
+      choices: { a: "Orne Jewett", b: "Mark Twain", c: "Oliver Langdon", d: "Louis Alcott" },
+      answer: "b"
+    },
+    {
+      question: "____ grew up in Hannibal, Missouri, which served as the model for “St Petersburg” in Huckleberry Finn.",
+      choices: { a: "Charles Dodgson", b: "Dorling Kindersley", c: "Samuel Langhorne Clemens", d: "James Fenimore" },
+      answer: "c"
+    },
+    {
+      question: "Mark Twain was born on:",
+      choices: { a: "3 November 1835", b: "3 November 1865", c: "30 November 1835", d: "30 November 1865" },
+      answer: "c"
+    },
+    {
+      question: "The concept of “childhood” was only invented in the ___ century when the middle classes began to see the value of a child's innocence and play ",
+      choices: { a: "16th", b: "17th", c: "18th", d: "19th" },
+      answer: "c"
+    },
+    {
+      question: "___, who wrote his Fairy Tales (1835-37) specifically for children, caused an outcry by failing to include a moral",
+      choices: { a: "Charles Dickens", b: "Johanna Spyri", c: "Charles Dodgson", d: "Hans Christian Andersen" },
+      answer: "d"
+    },
+     {
+      question: "The characters that Alice meets are mostly ___",
+      choices: { a: "evil", b: "animals", c: "inanimate", d: "surreal" },
+      answer: "b"
+    },
+    {
+      question: "Apart from Alice and her sister, who features before and after the adventure, the only human characters are the Mad Hatter and the ___,",
+      choices: { a: "Duchess", b: "Queen", c: "Timekeeper", d: "King" },
+      answer: "a"
+    },
+    {
+      question: "With little history to speak of and few literary traditions to anchor them, US writers in the ___ century were engaged in holding up a mirror to the varied, complex populations of their rapidly evolving nation.",
+      choices: { a: "16th", b: "17th", c: "18th", d: "19th"},
+      answer: "d"
+    },
+    {
+      question: "Harriet Beecher Stowe creates multiple vernacular voices in Uncle Tom’s Cabin, a sentimental story that inflames the anti slavery debate.",
+      choices: { a: "1823", b: "1852", c: "1896", d: "1939" },
+      answer: "b"
+    },
+    {
+      question: "John Steinbeck's Pulitzer Prize-winning novel The Grapes of Wrath mixes local color with social injustice in an epic story of a family's journey west amid the Great Depression.",
+      choices: { a: "1823", b: "1852", c: "1896", d: "1939"},
+      answer: "d"
+    },
+    {
+      question: "Twain's novel was published after the ___",
+      choices: { a: "American Civil War", b: "World War II", c: "Cold War", d: "American Indian War" },
+      answer: "a"
+    },
+    {
+      question: "Huck feigns death to escape the civilizing folk of Missouri and the brutality of his father and begins his journey down the ___ on a raft, in the company of Jim, a runaway slave.",
+      choices: { a: "Misissippi", b: "Missisippi", c: "Mississipi", d: "Mississippi" },
+      answer: "d"
+    },
+    {
+      question: "Mark Twain worked as a ___ and occasional writer,",
+      choices: { a: "typesetter", b: "teacher", c: "lecturer", d: "banker" },
+      answer: "a"
+    },
+    {
+      question: "In the late ___ and early ___ centuries, writing for children enjoyed a golden age founded on increasing literacy, the growth of commercial publishing, and recognition of the creative potential of a child's world",
+      choices: { a: "17th, 18th", b: "18th, 19th", c: "19th, 20th", d: "20th, 21st" },
+      answer: "c"
+    },
+    {
+      question: "On a July day in 1862, Charles Dodgson, a young mathematics don, went rowing with a male friend and three young sisters on the Thames near Oxford and told a story of a girl named Alice  which was also the name of one of his passengers, Alice __, aged ten",
+      choices: { a: "Stowe", b: "Barrie", c: "Liddell", d: "Scotsman" },
+      answer: "c"
+    },
+    {
+      question: "A text using description might also:, except",
+      choices: { a: "Tell you why we are describing something", b: "Tell you why the described topic is important", c: "Provide examples of the described topic(s)", d: "Tell you to use evidence to support a claim" },
+      answer: "d"
+    },
+    {
+      question: "Born in 1832 in Cheshire, England",
+      choices: { a: "Charles Dodgson", b: "Dorling Kindersley", c: "Samuel Langhorne Clemens", d: "James Fenimore"},
+      answer: "a"
+    },
+    {
+      question: "Jim said: I own myself, en Is worth ____ hundred dollars",
+      choices: { a: "six", b: "seven", c: "eight", d: "nine"},
+      answer: "c"
+    },
+    
+  ];
+
+  const questionContainer = document.getElementById("questionContainer");
+  const bubbleCol1 = document.getElementById("bubbleCol1");
+  const bubbleCol2 = document.getElementById("bubbleCol2");
+  const correctAnswers = {};
+  const totalQuestions = questions.length;
+
+  questions.forEach((q, i) => {
+    const num = i + 1;
+    correctAnswers[num] = q.answer;
+
+    const qDiv = document.createElement("div");
+    qDiv.className = "question";
+    qDiv.innerHTML = `
+      <strong>${num}. ${q.question}</strong><br>
+      <label><input type="radio" name="q${num}" value="a" onclick="markBubble(${num}, 'a')"> ${q.choices.a}</label>
+      <label><input type="radio" name="q${num}" value="b" onclick="markBubble(${num}, 'b')"> ${q.choices.b}</label>
+      <label><input type="radio" name="q${num}" value="c" onclick="markBubble(${num}, 'c')"> ${q.choices.c}</label>
+      <label><input type="radio" name="q${num}" value="d" onclick="markBubble(${num}, 'd')"> ${q.choices.d}</label>
+    `;
+    questionContainer.appendChild(qDiv);
+
+    const bubbleRow = document.createElement("div");
+    bubbleRow.className = "bubble";
+    bubbleRow.innerHTML = `
+      ${num}.
+      <span id="b${num}a"></span>
+      <span id="b${num}b"></span>
+      <span id="b${num}c"></span>
+      <span id="b${num}d"></span>
+    `;
+    (num <= 15 ? bubbleCol1 : bubbleCol2).appendChild(bubbleRow);
+  });
+
+  function markBubble(qNum, choice) {
+    ['a', 'b', 'c', 'd'].forEach(letter => {
+      const el = document.getElementById(`b${qNum}${letter}`);
+      el.classList.remove('filled');
+    });
+    const selected = document.getElementById(`b${qNum}${choice}`);
+    if (selected) selected.classList.add('filled');
+  }
+
+  // Timer Logic
+  const totalTime = 10 * 60; // 30 minutes in seconds
+  let timeLeft = totalTime;
+  const timerText = document.getElementById("timerText");
+  const progressCircle = document.getElementById("progressCircle");
+  const radius = 45;
+  const circumference = 2 * Math.PI * radius;
+  progressCircle.style.strokeDasharray = circumference;
+
+  function updateTimer() {
+    const minutes = Math.floor(timeLeft / 60);
+    const seconds = timeLeft % 60;
+    timerText.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+    const offset = circumference - (timeLeft / totalTime) * circumference;
+    progressCircle.style.strokeDashoffset = offset;
+  }
+
+  const timerInterval = setInterval(() => {
+    updateTimer();
+    if (timeLeft <= 0) {
+      clearInterval(timerInterval);
+      alert("Time is up! Submitting your quiz.");
+      document.getElementById("submitBtn").click();
+      document.getElementById("submitBtn").disabled = true;
+    }
+    timeLeft--;
+  }, 1000);
+
+  // Submit logic
+  document.getElementById("submitBtn").addEventListener("click", () => {
+    const name = document.getElementById("name").value.trim();
+    const section = document.getElementById("section").value.trim();
+    const subject = document.getElementById("subject").value.trim();
+
+    const music = document.getElementById("bg-music");
+    if (music.paused) {
+      music.play().catch(err => {
+        console.warn("Autoplay was blocked:", err);
+      });
+    }
+
+    if (!name || !section || !subject) {
+      alert("Please fill in Name, Section, and Subject.");
+      return;
+    }
+
+    let correct = 0, wrong = 0, unanswered = 0, feedback = "";
+
+    for (let i = 1; i <= totalQuestions; i++) {
+      const selected = document.querySelector(`input[name="q${i}"]:checked`);
+      if (selected) {
+        if (selected.value === correctAnswers[i]) {
+          correct++;
+        } else {
+          wrong++;
+          feedback += `❌ Q${i} (Your answer: ${selected.value}, Correct: ${correctAnswers[i]})<br>`;
+        }
+      } else {
+        unanswered++;
+        feedback += `⚠️ Q${i} was not answered (Correct: ${correctAnswers[i]})<br>`;
+      }
+    }
+
+    const summary = `
+      <p><strong>Name:</strong> ${name}</p>
+      <p><strong>Section:</strong> ${section}</p>
+      <p><strong>Subject:</strong> ${subject}</p>
+      <p><strong>Score:</strong> ${correct}/${totalQuestions}</p>
+      <p><strong>Correct:</strong> ${correct}</p>
+      <p><strong>Wrong:</strong> ${wrong}</p>
+      <p><strong>Unanswered:</strong> ${unanswered}</p>
+      <hr>
+      <div>${feedback}</div>
+    `;
+
+    document.getElementById("scoreSummary").innerHTML = summary;
+  });
+
+  updateTimer(); // Initialize timer immediately
+</script>
+
+</body>
+</html>

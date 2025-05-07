@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Quiz App</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      display: flex;
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+    .left {
+      width: 60%;
+      height: 100vh;
+      overflow-y: scroll;
+      padding: 20px;
+      border-right: 1px solid #ccc;
+    }
+    .right {
+      width: 40%;
+      padding: 20px;
+      position: relative;
+    }
+    .question {
+      margin-bottom: 20px;
+    }
+    .question label {
+      margin-right: 10px;
+    }
+    .bubble {
+      display: flex;
+      align-items: center;
+      margin-bottom: 5px;
+    }
+    .bubble span {
+      display: inline-block;
+      width: 14px;
+      height: 14px;
+      border: 1px solid black;
+      border-radius: 50%;
+      margin: 0 3px;
+    }
+    .filled {
+      background-color: black;
+    }
+    #bubbleWrapper {
+    display: flex;
+  justify-content: center;  /* center the columns horizontally */
+  gap: 30px;
+  margin: 20px 0;
+}
+
+    input[type="text"] {
+      width: 100%;
+      margin-bottom: 10px;
+      padding: 5px;
+    }
+    #submitBtn {
+      display: block;
+      margin: 20px auto; /* auto margins center it horizontally */
+      padding: 10px 20px;
+      background-color: green;
+      color: white;
+      font-size: 16px;
+      border: none;
+      cursor: pointer;
+    }
+    #scoreSummary {
+      margin-top: 20px;
+      font-weight: bold;
+    }
+    /* Timer Styles */
+    #timerContainer {
+      width: 120px;
+      height: 120px;
+      margin: 0 auto 20px;
+      position: relative;
+    }
+    #timerCircle {
+      width: 100%;
+      height: 100%;
+      transform: rotate(-90deg);
+    }
+    #timerCircle circle {
+      fill: none;
+      stroke-width: 10;
+    }
+    #bgCircle {
+      stroke: #eee;
+    }
+    #progressCircle {
+      stroke: red;
+      stroke-linecap: round;
+      transition: stroke-dashoffset 1s linear;
+    }
+    #timerText {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-weight: bold;
+      font-size: 18px;
+      color: red;
+    }
+    #bubbleCol1, #bubbleCol2 {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+  </style>
+</head>
+<body>
+
+<!-- Background Music -->
+<audio id="bg-music" loop>
+  <source src="congrats.mp3" type="audio/mpeg">
+  Your browser does not support the audio element.
+</audio>
+
+<!-- Left Panel -->
+<div class="left" id="questionContainer">
+    <h1>MIS Reviewer</h1>
+    <h3>Type in your name, section and subject to view summary after submitting</h3>
+</div>
+
+<!-- Right Panel -->
+<div class="right">
+  <div id="timerContainer">
+    <svg id="timerCircle" viewBox="0 0 100 100">
+      <circle id="bgCircle" cx="50" cy="50" r="45"></circle>
+      <circle id="progressCircle" cx="50" cy="50" r="45" stroke-dasharray="282.6" stroke-dashoffset="0"></circle>
+    </svg>
+    <div id="timerText">30:00</div>
+  </div>
+
+  <input type="text" id="name" placeholder="NAME">
+  <input type="text" id="section" placeholder="SECTION">
+  <input type="text" id="subject" placeholder="SUBJECT">
+
+  <div id="bubbleWrapper">
+    <div id="bubbleCol1"></div>
+    <div id="bubbleCol2"></div>
+  </div>
+
+  <button id="submitBtn">SUBMIT</button>
+  <div id="scoreSummary"></div>
+</div>
+
+<script>
+  const questions = [
+    {
+      question: "type of information system that supports management decision-making by providing various types of reports",
+      choices: { a: "Tactical Accounting System", b: "Financial Information System", c: "Tactical Information System", d: "Tactical Marketing Information System" },
+      answer: "c"
+    },
+    {
+      question: "This system produces cash flow reports, which show the estimated amount of incoming and outgoing cash for a specific timeframe",
+      choices: { a: "Capital Budgeting System", b: "Investment Management System", c: "Cash Management System", d: "Capital Management System" },
+      answer: "c"
+    },
+    {
+      question: "This system produces reports that allow a manager to oversee an organization's investments in stocks, bonds",
+      choices: { a: "Capital Budgeting System", b: "Investment Management System", c: "Cash Management System", d: "Capital Management System" },
+      answer: "b"
+    },
+    {
+      question: "This system focuses on producing information for the acquisition or disposal of assets for a given timeframe",
+      choices: { a: "Capital Budgeting System", b: "Investment Management System", c: "Cash Management System", d: "Capital Management System" },
+      answer: "a"
+    },
+    {
+      question: "It is a type of information system that also has the ability to generate reports, but also has the capacity to create expected and unexpected output",
+      choices: { a: "Tactical Accounting and Financial Information System", b: "Financial Information System", c: "Tactical Information System", d: "Tactical Marketing Information System" },
+      answer: "d"
+    },
+    {
+      question: "This system allows managers to assess the productivity of a sales force, the profitability of certain locations, and the success of the products",
+      choices: { a: "Competitive Tracking System", b: "Sales Management System", c: "Advertising and Promotion System", d: "Distribution Channel System" },
+      answer: "b"
+    },
+    {
+      question: "This particular system governs advertising and promotional tactics in order to achieve sales goals set by upper management",
+      choices: { a: "Competitive Tracking System", b: "Sales Management System", c: "Advertising and Promotion System", d: "Distribution Channel System" },
+      answer: "c"
+    },
+    {
+      question: "This system ensures an organization’s marketing strategy can continue to satisfy customers by monitoring market volatility",
+      choices: { a: "Competitive Tracking System", b: "Sales Management System", c: "Advertising and Promotion System", d: "Distribution Channel System"  },
+      answer: "a"
+    },
+    {
+      question: "information may include timeframes for deliveries, time lags caused by use of certain channels, reliability ratings for channels based on delivery efficiency, and the market segment situation provided by the channels",
+      choices: { a: "Competitive Tracking System", b: "Sales Management System", c: "Advertising and Promotion System", d: "Distribution Channel System" },
+      answer: "d"
+    },
+    {
+      question: "Tactical marketing information systems usually work in tandem with operational information systems for ___",
+      choices: { a: "marketing and finance", b: "marketing and sales", c: "promotions and sales", d: "marketing and promotions" },
+      answer: "a"
+    },
+    {
+      question: "an information system that handles strategic marketing activities, such as segmentation of the market based on target demographics and criteria",
+      choices: { a: "Strategic Marketing Information System", b: "Sales Forecasting System", c: "Process Positioning System", d: "Technology Planning and Assessment System" },
+      answer: "a"
+    },
+     {
+      question: "This system creates different types of sales forecasts, from industry sales, product/service sales",
+      choices: { a: "Strategic Marketing Information System", b: "Sales Forecasting System", c: "Process Positioning System", d: "Technology Planning and Assessment System" },
+      answer: "b"
+    },
+    {
+      question: "The system can identify new technologies and assess them for their strategic advantages, which can help top management",
+      choices: { a: "Strategic Marketing Information System", b: "Sales Forecasting System", c: "Process Positioning System", d: "Technology Planning and Assessment System" },
+      answer: "d"
+    },
+    {
+      question: "Conducting trend analysis of industry-wide market sales, analysis of target demographics including changes in data or trends, analysis, and identification of target demographic preferences",
+      choices: { a: "Marketing Information System", b: "Sales Forecasting System", c: "Process Positioning System", d: "Marketing Research System" },
+      answer: "d"
+    },
+    {
+      question: "This system relies on a variety of internal (within the organization) and external (outside the organization) sources of information.",
+      choices: { a: "Marketing Information System", b: "Site Planning and Selection System", c: "Research Positioning System", d: "Tactical Research System" },
+      answer: "b"
+    },
+    {
+      question: "supports HR managers in handling aspects of the acquisition, allocation, and maintenance of an organization's workforce",
+      choices: { a: "Tactical Human Resource Information System", b: "Human Resource Information System", c: "Tactical Human Resource System", d: "Human Resource System" },
+      answer: "a"
+    },
+    {
+      question: "These systems ensure that replacements for key positions in the organization",
+      choices: { a: "Succession Planning Systems", b: "Job Analysis and Design Systems", c: "Recruiting Systems", d: "Employee Training and Development Systems" },
+      answer: "a"
+    },
+     {
+      question: "Capacity-building for employees is facilitated by finding potential employees that meet certain criteria and creating training",
+      choices: { a: "Succession Planning Systems", b: "Job Analysis and Design Systems", c: "Recruiting Systems", d: "Employee Training and Development Systems" },
+      answer: "d"
+    },
+    {
+      question: "These systems handle functions that provide an organization with a pool of qualified applicants that may fill vacant positions",
+      choices: { a: "Succession Planning Systems", b: "Job Analysis and Design Systems", c: "Recruiting Systems", d: "Employee Training and Development Systems" },
+      answer: "c"
+    },
+    {
+      question: "These systems create jobs or positions required by an organization",
+      choices: { a: "Succession Planning Systems", b: "Job Analysis and Design Systems", c: "Recruiting Systems", d: "Employee Training and Development Systems" },
+      answer: "b"
+    },
+    {
+      question: "HRIS stands for",
+      choices: { a: "human resource information systems", b: "human recruting information systems", c: "human resources internal systems", d: "human resources informations system" },
+      answer: "a"
+    },
+    {
+      question: "type of information system that manages the organization's workforce as a whole",
+      choices: { a: "Human Resource Information Systems", b: "Strategic Human Resource Information System", c: "Tactical Human Resource Information System", d: "Human Resource Training System" },
+      answer: "b"
+    },
+    {
+      question: "These systems facilitate strategic long-term workforce planning and management using relevant data",
+      choices: { a: "Compensation and Benefit Systems", b: "Workforce Planning Systems", c: "Labor Negotiation Systems", d: "Recruiting Systems" },
+      answer: "b"
+    },
+    {
+      question: "These systems gather data from other HR information systems, as well as information from financial accounting systems and external sources, in order to help create terms",
+      choices: { a: "Compensation and Benefit Systems", b: "Workforce Planning Systems", c: "Labor Negotiation Systems", d: "Recruiting Systems" },
+      answer: "c"
+    },
+    {
+      question: "Uses relevant data such as budget allocations and job descriptions, they provide a variety of tactical HR decisions for payment plans",
+      choices: { a: "Compensation and Benefit Systems", b: "Workforce Planning Systems", c: "Labor Negotiation Systems", d: "Recruiting Systems" },
+      answer: "a"
+    },
+    {
+      question: "One must keep in mind that these systems only help a manager create decisions based on the data it provides; it is a decision support system, NOT ___",
+      choices: { a: "an automated decision system", b: "an industry-wide data", c: "a decision-making system", d: "an operational task" },
+      answer: "a"
+    },
+    {
+      question: "Process Positioning System handles process positioning, or ____, which are processes that are to be performed for any given product or service",
+      choices: { a: "completion dates", b: "field", c: "vertical integration", d: "proximity" },
+      answer: "c"
+    },
+    {
+      question: "Compared to tactical information systems, which handle managerial decisions for given timeframes, strategic-level information systems are designed to be ___",
+      choices: { a: "executive-level", b: "demographical", c: "surgical", d: "goal-oriented;" },
+      answer: "d"
+    },
+    {
+      question: "___ for employees is facilitated by finding potential employees that meet certain criteria and creating training and development plans",
+      choices: { a: "Training", b: "Capacity-building", c: "Recruitment", d: "Manpower" },
+      answer: "b"
+    },
+    {
+      question: "Because decisions of this magnitude require the commitment of large amounts of ___ over a long period of time, information from Strategic Production Information System is important and is therefore not to be taken lightly.",
+      choices: { a: "capital and resources", b: "budget", c: "bonds and investment", d: "stocks" },
+      answer: "a"
+    },
+  ];
+
+  const questionContainer = document.getElementById("questionContainer");
+  const bubbleCol1 = document.getElementById("bubbleCol1");
+  const bubbleCol2 = document.getElementById("bubbleCol2");
+  const correctAnswers = {};
+  const totalQuestions = questions.length;
+
+  questions.forEach((q, i) => {
+    const num = i + 1;
+    correctAnswers[num] = q.answer;
+
+    const qDiv = document.createElement("div");
+    qDiv.className = "question";
+    qDiv.innerHTML = `
+      <strong>${num}. ${q.question}</strong><br>
+      <label><input type="radio" name="q${num}" value="a" onclick="markBubble(${num}, 'a')"> ${q.choices.a}</label>
+      <label><input type="radio" name="q${num}" value="b" onclick="markBubble(${num}, 'b')"> ${q.choices.b}</label>
+      <label><input type="radio" name="q${num}" value="c" onclick="markBubble(${num}, 'c')"> ${q.choices.c}</label>
+      <label><input type="radio" name="q${num}" value="d" onclick="markBubble(${num}, 'd')"> ${q.choices.d}</label>
+    `;
+    questionContainer.appendChild(qDiv);
+
+    const bubbleRow = document.createElement("div");
+    bubbleRow.className = "bubble";
+    bubbleRow.innerHTML = `
+      ${num}.
+      <span id="b${num}a"></span>
+      <span id="b${num}b"></span>
+      <span id="b${num}c"></span>
+      <span id="b${num}d"></span>
+    `;
+    (num <= 15 ? bubbleCol1 : bubbleCol2).appendChild(bubbleRow);
+  });
+
+  function markBubble(qNum, choice) {
+    ['a', 'b', 'c', 'd'].forEach(letter => {
+      const el = document.getElementById(`b${qNum}${letter}`);
+      el.classList.remove('filled');
+    });
+    const selected = document.getElementById(`b${qNum}${choice}`);
+    if (selected) selected.classList.add('filled');
+  }
+
+  // Timer Logic
+  const totalTime = 10 * 60; // 30 minutes in seconds
+  let timeLeft = totalTime;
+  const timerText = document.getElementById("timerText");
+  const progressCircle = document.getElementById("progressCircle");
+  const radius = 45;
+  const circumference = 2 * Math.PI * radius;
+  progressCircle.style.strokeDasharray = circumference;
+
+  function updateTimer() {
+    const minutes = Math.floor(timeLeft / 60);
+    const seconds = timeLeft % 60;
+    timerText.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+    const offset = circumference - (timeLeft / totalTime) * circumference;
+    progressCircle.style.strokeDashoffset = offset;
+  }
+
+  const timerInterval = setInterval(() => {
+    updateTimer();
+    if (timeLeft <= 0) {
+      clearInterval(timerInterval);
+      alert("Time is up! Submitting your quiz.");
+      document.getElementById("submitBtn").click();
+      document.getElementById("submitBtn").disabled = true;
+    }
+    timeLeft--;
+  }, 1000);
+
+  // Submit logic
+  document.getElementById("submitBtn").addEventListener("click", () => {
+    const name = document.getElementById("name").value.trim();
+    const section = document.getElementById("section").value.trim();
+    const subject = document.getElementById("subject").value.trim();
+
+    const music = document.getElementById("bg-music");
+    if (music.paused) {
+      music.play().catch(err => {
+        console.warn("Autoplay was blocked:", err);
+      });
+    }
+
+    if (!name || !section || !subject) {
+      alert("Please fill in Name, Section, and Subject.");
+      return;
+    }
+
+    let correct = 0, wrong = 0, unanswered = 0, feedback = "";
+
+    for (let i = 1; i <= totalQuestions; i++) {
+      const selected = document.querySelector(`input[name="q${i}"]:checked`);
+      if (selected) {
+        if (selected.value === correctAnswers[i]) {
+          correct++;
+        } else {
+          wrong++;
+          feedback += `❌ Q${i} (Your answer: ${selected.value}, Correct: ${correctAnswers[i]})<br>`;
+        }
+      } else {
+        unanswered++;
+        feedback += `⚠️ Q${i} was not answered (Correct: ${correctAnswers[i]})<br>`;
+      }
+    }
+
+    const summary = `
+      <p><strong>Name:</strong> ${name}</p>
+      <p><strong>Section:</strong> ${section}</p>
+      <p><strong>Subject:</strong> ${subject}</p>
+      <p><strong>Score:</strong> ${correct}/${totalQuestions}</p>
+      <p><strong>Correct:</strong> ${correct}</p>
+      <p><strong>Wrong:</strong> ${wrong}</p>
+      <p><strong>Unanswered:</strong> ${unanswered}</p>
+      <hr>
+      <div>${feedback}</div>
+    `;
+
+    document.getElementById("scoreSummary").innerHTML = summary;
+  });
+
+  updateTimer(); // Initialize timer immediately
+</script>
+
+</body>
+</html>

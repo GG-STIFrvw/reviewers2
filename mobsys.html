@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Quiz App</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      display: flex;
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+    .left {
+      width: 60%;
+      height: 100vh;
+      overflow-y: scroll;
+      padding: 20px;
+      border-right: 1px solid #ccc;
+    }
+    .right {
+      width: 40%;
+      padding: 20px;
+      position: relative;
+    }
+    .question {
+      margin-bottom: 20px;
+    }
+    .question label {
+      margin-right: 10px;
+    }
+    .bubble {
+      display: flex;
+      align-items: center;
+      margin-bottom: 5px;
+    }
+    .bubble span {
+      display: inline-block;
+      width: 14px;
+      height: 14px;
+      border: 1px solid black;
+      border-radius: 50%;
+      margin: 0 3px;
+    }
+    .filled {
+      background-color: black;
+    }
+    #bubbleWrapper {
+    display: flex;
+    justify-content: center;  /* center the columns horizontally */
+    gap: 30px;
+    margin: 20px 0;
+}
+
+    input[type="text"] {
+      width: 100%;
+      margin-bottom: 10px;
+      padding: 5px;
+    }
+    #submitBtn {
+      display: block;
+      margin: 20px auto; /* auto margins center it horizontally */
+      padding: 10px 20px;
+      background-color: green;
+      color: white;
+      font-size: 16px;
+      border: none;
+      cursor: pointer;
+    }
+    #scoreSummary {
+      margin-top: 20px;
+      font-weight: bold;
+    }
+    /* Timer Styles */
+    #timerContainer {
+      width: 120px;
+      height: 120px;
+      margin: 0 auto 20px;
+      position: relative;
+    }
+    #timerCircle {
+      width: 100%;
+      height: 100%;
+      transform: rotate(-90deg);
+    }
+    #timerCircle circle {
+      fill: none;
+      stroke-width: 10;
+    }
+    #bgCircle {
+      stroke: #eee;
+    }
+    #progressCircle {
+      stroke: red;
+      stroke-linecap: round;
+      transition: stroke-dashoffset 1s linear;
+    }
+    #timerText {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-weight: bold;
+      font-size: 18px;
+      color: red;
+    }
+    #bubbleCol1, #bubbleCol2 {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+  </style>
+</head>
+<body>
+
+<!-- Background Music -->
+<audio id="bg-music" loop>
+  <source src="congrats.mp3" type="audio/mpeg">
+  Your browser does not support the audio element.
+</audio>
+
+<!-- Left Panel -->
+<div class="left" id="questionContainer">
+    <h1>MobSys Reviewer</h1>
+    <h3>Type in your name, section and subject to view summary after submitting</h3>
+</div>
+
+<!-- Right Panel -->
+<div class="right">
+  <div id="timerContainer">
+    <svg id="timerCircle" viewBox="0 0 100 100">
+      <circle id="bgCircle" cx="50" cy="50" r="45"></circle>
+      <circle id="progressCircle" cx="50" cy="50" r="45" stroke-dasharray="282.6" stroke-dashoffset="0"></circle>
+    </svg>
+    <div id="timerText">30:00</div>
+  </div>
+
+  <input type="text" id="name" placeholder="NAME">
+  <input type="text" id="section" placeholder="SECTION">
+  <input type="text" id="subject" placeholder="SUBJECT">
+
+  <div id="bubbleWrapper">
+    <div id="bubbleCol1"></div>
+    <div id="bubbleCol2"></div>
+  </div>
+
+  <button id="submitBtn">SUBMIT</button>
+  <div id="scoreSummary"></div>
+</div>
+
+<script>
+  const questions = [
+    {
+      question: " in mobile apps typically involves tapping, typing, using gestures, or talking",
+      choices: { a: "Keys", b: "Actions", c: "Controls", d: "User interaction" },
+      answer: "d"
+    },
+    {
+      question: "Which is not an option when designing an interactive app",
+      choices: { a: "Think about how users will use your app", b: "Minimize RAM usage", c: "Meet user's expectations", d: "Follow Android's best practices" },
+      answer: "b"
+    },
+    {
+      question: "A ___ button appears lifted from the screen—the shading around it indicates that it is possible to tap or click it.",
+      choices: { a: "raised", b: "flat", c: "light", d: "floating action" },
+      answer: "a"
+    },
+    {
+      question: "A ___ button or borderless button is a text-only button that looks flat and doesn't have a shadow.",
+      choices: { a: "raised", b: "flat", c: "light", d: "floating action" },
+      answer: "b"
+    },
+    {
+      question: "A ___ button is a circular button that appears to float above the layout.",
+      choices: { a: "raised", b: "flat", c: "light", d: "floating action" },
+      answer: "d"
+    },
+    {
+      question: "An ___ is used to display image resources.",
+      choices: { a: "ImageResourceView", b: "ImageView", c: "ImageClickable", d: "ImageAttribute" },
+      answer: "b"
+    },
+    {
+      question: "The image must already be stored in app > src > main > res > ___ folder of the project.",
+      choices: { a: "files", b: "images", c: "drawable", d: "app" },
+      answer: "c"
+    },
+    {
+      question: "___ occurs when a user places one or more fingers, and the app interprets that pattern, such as a tap, touch & hold, double-tap, fling, or scroll.",
+      choices: { a: "touch gesture", b: "controls", c: "input controls", d: "movement pattern" },
+      answer: "a"
+    },
+    {
+      question: "___ - interactive elements in the app's UI that accept data input.",
+      choices: { a: "touch gesture", b: "controls", c: "input controls", d: "movement pattern" },
+      answer: "c"
+    },
+    {
+      question: "The ___ class is used for adding rich images in an app with a minimal impact on its performance.",
+      choices: { a: "Drawable", b: "Style", c: "ImageView", d: "Content" },
+      answer: "a"
+    },
+    {
+      question: "A text field (___) is used for entering and modifying text",
+      choices: { a: "TextField", b: "InsertText", c: "EditText", d: "TextInput" },
+      answer: "c"
+    },
+     {
+      question: " A ___ is used for selecting one or more options",
+      choices: { a: "radio button", b: "check box", c: "spinner", d: "seekbar" },
+      answer: "b"
+    },
+    {
+      question: " A ___ restricts the user to select only one (1) option from a set.",
+      choices: { a: "radio button", b: "check box", c: "spinner", d: "seekbar" },
+      answer: "a"
+    },
+    {
+      question: "A ___ is dragged to the left or right to indicate a current progress level",
+      choices: { a: "radio button", b: "check box", c: "spinner", d: "seekbar" },
+      answer: "d"
+    },
+    {
+      question: "A ___ is a drop-down menu for selecting only one (1) option. res/values/strings.xml",
+      choices: { a: "radio button", b: "check box", c: "spinner", d: "seekbar" },
+      answer: "c"
+    },
+    {
+      question: "___ occurs when the user interacts with an input control or item in the user interface. ",
+      choices: { a: "event", b: "key", c: "user interaction", d: "gesture" },
+      answer: "a"
+    },
+    {
+      question: "When the user performs an action qualified as a touch event (a press, a release, or any movement gesture on the screen)",
+      choices: { a: "onClick() : OnClickListener", b: "onLongClick() : OnLongClickListener", c: "onKey() : OnKeyListener", d: "onTouch() : OnTouchListener " },
+      answer: "d"
+    },
+     {
+      question: "When the user either touches or focuses upon the item for a second",
+      choices: { a: "onClick() : OnClickListener", b: "onLongClick() : OnLongClickListener", c: "onKey() : OnKeyListener", d: "onTouch() : OnTouchListener " },
+      answer: "b"
+    },
+    {
+      question: "When the user either touches or focuses upon the item",
+      choices: { a: "onClick() : OnClickListener", b: "onLongClick() : OnLongClickListener", c: "onKey() : OnKeyListener", d: "onTouch() : OnTouchListener " },
+      answer: "a"
+    },
+    {
+      question: "When the user is focused on the item and presses or releases a hardware key on the device",
+      choices: { a: "onClick() : OnClickListener", b: "onLongClick() : OnLongClickListener", c: "onKey() : OnKeyListener", d: "onTouch() : OnTouchListener " },
+      answer: "b"
+    },
+    {
+      question: "A ___ is a collection of attributes that define the look and format of a view.",
+      choices: { a: "theme", b: "style", c: "content", d: "platform" },
+      answer: "b"
+    },
+    {
+      question: "To inherit a platform style, use the ___ attribute to specify the resource ID of the style you want to inherit.",
+      choices: { a: "inheritance", b: "parent", c: "extend", d: "child" },
+      answer: "b"
+    },
+    {
+      question: "A ___ is a collection of attributes that define the look and format of an activity or an entire app.",
+      choices: { a: "theme", b: "style", c: "content", d: "platform" },
+      answer: "a"
+    },
+    {
+      question: "The styles that Android provides are called ___ styles",
+      choices: { a: "theme", b: "saved", c: "content", d: "platform" },
+      answer: "d"
+    },
+    {
+      question: "To create a style, add a style element inside a resources element in any XML file located in the values folder inside the project's ___ folder.",
+      choices: { a: "res", b: "src", c: "drawable", d: "img" },
+      answer: "a"
+    },
+    {
+      question: "JPG/JPEG means",
+      choices: { a: "Joined Photographic Experts Group", b: "Join Photographic Expert Group", c: "Joint Photographic Experts Group", d: "Joint Photograph Experts Group" },
+      answer: "c"
+    },
+    {
+      question: "GIF means",
+      choices: { a: "Graphic Interchangeable Format", b: "Graphics Interchange Form", c: "Graphics Interchange Format", d: "Graphical Interchange Format" },
+      answer: "c"
+    },
+    {
+      question: "PNG means",
+      choices: { a: "Printable Network Graphic", b: "Portable Net Graphics", c: "Printable Network Graphics", d: "Portable Network Graphics" },
+      answer: "d"
+    },
+    {
+      question: "___ - a modern image format developed by Google that provides superior lossless and lossy compression for images on the internet",
+      choices: { a: "HEIC", b: "PNG", c: "WebP", d: "BMP" },
+      answer: "c"
+    },
+    {
+      question: "A type of toggle button called ___ (for Android 4.0+) provides a slider for selection.",
+      choices: { a: "mode", b: "slider", c: "seekbar", d: "switch" },
+      answer: "d"
+    },
+  ];
+
+  const questionContainer = document.getElementById("questionContainer");
+  const bubbleCol1 = document.getElementById("bubbleCol1");
+  const bubbleCol2 = document.getElementById("bubbleCol2");
+  const correctAnswers = {};
+  const totalQuestions = questions.length;
+
+  questions.forEach((q, i) => {
+    const num = i + 1;
+    correctAnswers[num] = q.answer;
+
+    const qDiv = document.createElement("div");
+    qDiv.className = "question";
+    qDiv.innerHTML = `
+      <strong>${num}. ${q.question}</strong><br>
+      <label><input type="radio" name="q${num}" value="a" onclick="markBubble(${num}, 'a')"> ${q.choices.a}</label>
+      <label><input type="radio" name="q${num}" value="b" onclick="markBubble(${num}, 'b')"> ${q.choices.b}</label>
+      <label><input type="radio" name="q${num}" value="c" onclick="markBubble(${num}, 'c')"> ${q.choices.c}</label>
+      <label><input type="radio" name="q${num}" value="d" onclick="markBubble(${num}, 'd')"> ${q.choices.d}</label>
+    `;
+    questionContainer.appendChild(qDiv);
+
+    const bubbleRow = document.createElement("div");
+    bubbleRow.className = "bubble";
+    bubbleRow.innerHTML = `
+      ${num}.
+      <span id="b${num}a"></span>
+      <span id="b${num}b"></span>
+      <span id="b${num}c"></span>
+      <span id="b${num}d"></span>
+    `;
+    (num <= 15 ? bubbleCol1 : bubbleCol2).appendChild(bubbleRow);
+  });
+
+  function markBubble(qNum, choice) {
+    ['a', 'b', 'c', 'd'].forEach(letter => {
+      const el = document.getElementById(`b${qNum}${letter}`);
+      el.classList.remove('filled');
+    });
+    const selected = document.getElementById(`b${qNum}${choice}`);
+    if (selected) selected.classList.add('filled');
+  }
+
+  // Timer Logic
+  const totalTime = 10 * 60; // 30 minutes in seconds
+  let timeLeft = totalTime;
+  const timerText = document.getElementById("timerText");
+  const progressCircle = document.getElementById("progressCircle");
+  const radius = 45;
+  const circumference = 2 * Math.PI * radius;
+  progressCircle.style.strokeDasharray = circumference;
+
+  function updateTimer() {
+    const minutes = Math.floor(timeLeft / 60);
+    const seconds = timeLeft % 60;
+    timerText.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+    const offset = circumference - (timeLeft / totalTime) * circumference;
+    progressCircle.style.strokeDashoffset = offset;
+  }
+
+  const timerInterval = setInterval(() => {
+    updateTimer();
+    if (timeLeft <= 0) {
+      clearInterval(timerInterval);
+      alert("Time is up! Submitting your quiz.");
+      document.getElementById("submitBtn").click();
+      document.getElementById("submitBtn").disabled = true;
+    }
+    timeLeft--;
+  }, 1000);
+
+  // Submit logic
+  document.getElementById("submitBtn").addEventListener("click", () => {
+    const name = document.getElementById("name").value.trim();
+    const section = document.getElementById("section").value.trim();
+    const subject = document.getElementById("subject").value.trim();
+
+    const music = document.getElementById("bg-music");
+    if (music.paused) {
+      music.play().catch(err => {
+        console.warn("Autoplay was blocked:", err);
+      });
+    }
+
+    if (!name || !section || !subject) {
+      alert("Please fill in Name, Section, and Subject.");
+      return;
+    }
+
+    let correct = 0, wrong = 0, unanswered = 0, feedback = "";
+
+    for (let i = 1; i <= totalQuestions; i++) {
+      const selected = document.querySelector(`input[name="q${i}"]:checked`);
+      if (selected) {
+        if (selected.value === correctAnswers[i]) {
+          correct++;
+        } else {
+          wrong++;
+          feedback += `❌ Q${i} (Your answer: ${selected.value}, Correct: ${correctAnswers[i]})<br>`;
+        }
+      } else {
+        unanswered++;
+        feedback += `⚠️ Q${i} was not answered (Correct: ${correctAnswers[i]})<br>`;
+      }
+    }
+
+    const summary = `
+      <p><strong>Name:</strong> ${name}</p>
+      <p><strong>Section:</strong> ${section}</p>
+      <p><strong>Subject:</strong> ${subject}</p>
+      <p><strong>Score:</strong> ${correct}/${totalQuestions}</p>
+      <p><strong>Correct:</strong> ${correct}</p>
+      <p><strong>Wrong:</strong> ${wrong}</p>
+      <p><strong>Unanswered:</strong> ${unanswered}</p>
+      <hr>
+      <div>${feedback}</div>
+    `;
+
+    document.getElementById("scoreSummary").innerHTML = summary;
+  });
+
+  updateTimer(); // Initialize timer immediately
+</script>
+
+</body>
+</html>

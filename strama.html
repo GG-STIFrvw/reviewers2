@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Quiz App</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      display: flex;
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+    .left {
+      width: 60%;
+      height: 100vh;
+      overflow-y: scroll;
+      padding: 20px;
+      border-right: 1px solid #ccc;
+    }
+    .right {
+      width: 40%;
+      padding: 20px;
+      position: relative;
+    }
+    .question {
+      margin-bottom: 20px;
+    }
+    .question label {
+      margin-right: 10px;
+    }
+    .bubble {
+      display: flex;
+      align-items: center;
+      margin-bottom: 5px;
+    }
+    .bubble span {
+      display: inline-block;
+      width: 14px;
+      height: 14px;
+      border: 1px solid black;
+      border-radius: 50%;
+      margin: 0 3px;
+    }
+    .filled {
+      background-color: black;
+    }
+    #bubbleWrapper {
+    display: flex;
+    justify-content: center;  /* center the columns horizontally */
+    gap: 30px;
+    margin: 20px 0;
+}
+
+    input[type="text"] {
+      width: 100%;
+      margin-bottom: 10px;
+      padding: 5px;
+    }
+    #submitBtn {
+      display: block;
+      margin: 20px auto; /* auto margins center it horizontally */
+      padding: 10px 20px;
+      background-color: green;
+      color: white;
+      font-size: 16px;
+      border: none;
+      cursor: pointer;
+    }
+    #scoreSummary {
+      margin-top: 20px;
+      font-weight: bold;
+    }
+    /* Timer Styles */
+    #timerContainer {
+      width: 120px;
+      height: 120px;
+      margin: 0 auto 20px;
+      position: relative;
+    }
+    #timerCircle {
+      width: 100%;
+      height: 100%;
+      transform: rotate(-90deg);
+    }
+    #timerCircle circle {
+      fill: none;
+      stroke-width: 10;
+    }
+    #bgCircle {
+      stroke: #eee;
+    }
+    #progressCircle {
+      stroke: red;
+      stroke-linecap: round;
+      transition: stroke-dashoffset 1s linear;
+    }
+    #timerText {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-weight: bold;
+      font-size: 18px;
+      color: red;
+    }
+    #bubbleCol1, #bubbleCol2 {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+  </style>
+</head>
+<body>
+
+<!-- Background Music -->
+<audio id="bg-music" loop>
+  <source src="congrats.mp3" type="audio/mpeg">
+  Your browser does not support the audio element.
+</audio>
+
+<!-- Left Panel -->
+<div class="left" id="questionContainer">
+    <h1>StraMa Reviewer</h1>
+    <h3>Type in your name, section and subject to view summary after submitting</h3>
+</div>
+
+<!-- Right Panel -->
+<div class="right">
+  <div id="timerContainer">
+    <svg id="timerCircle" viewBox="0 0 100 100">
+      <circle id="bgCircle" cx="50" cy="50" r="45"></circle>
+      <circle id="progressCircle" cx="50" cy="50" r="45" stroke-dasharray="282.6" stroke-dashoffset="0"></circle>
+    </svg>
+    <div id="timerText">30:00</div>
+  </div>
+
+  <input type="text" id="name" placeholder="NAME">
+  <input type="text" id="section" placeholder="SECTION">
+  <input type="text" id="subject" placeholder="SUBJECT">
+
+  <div id="bubbleWrapper">
+    <div id="bubbleCol1"></div>
+    <div id="bubbleCol2"></div>
+  </div>
+
+  <button id="submitBtn">SUBMIT</button>
+  <div id="scoreSummary"></div>
+</div>
+
+<script>
+  const questions = [
+    {
+      question: "These are often called (SOPs), which typically detail the various activities that must be carried out to complete a corporation's programs and tactical plans",
+      choices: { a: "Budgets", b: "Programs", c: "Procedures", d: "Plans" },
+      answer: "c"
+    },
+    {
+      question: "___ is the totality of activities and choices required to execute a strategic plan",
+      choices: { a: "Organizational conduct", b: "Strategic plan", c: "Differentiation strategy", d: "Strategy implementation" },
+      answer: "d"
+    },
+    {
+      question: "An ideal strategy might be completely impractical only after specific implementation programs and tactics are costed in detail",
+      choices: { a: "Budgets", b: "Programs", c: "Procedures", d: "Plans" },
+      answer: "a"
+    },
+    {
+      question: "a collection of tactics, and a tactic is an individual action taken by the organization as an element of the effort to accomplish a plan",
+      choices: { a: "Budgets", b: "Programs", c: "Procedures", d: "Plans" },
+      answer: "b"
+    },
+    {
+      question: "The following are the pre-requisites of strategy implementation, except:",
+      choices: { a: "Define Key Performance Indicators", b: "Implement inconsistent reports", c: "Define the strategy framework", d: "Link performance reviews to strategy" },
+      answer: "b"
+    },
+    {
+      question: "attempts to capture a wide slice of territory by launching a grand offensive on several fronts",
+      choices: { a: "Encirclement attack", b: "Frontal attack.", c: "Flank attack", d: "Bypass attack" },
+      answer: "a"
+    },
+    {
+      question: "attempts to cut the market from under the established defender by offering a new type of product that makes the competitor's product unnecessary",
+      choices: { a: "Encirclement attack", b: "Frontal attack.", c: "Flank attack", d: "Bypass attack" },
+      answer: "d"
+    },
+    {
+      question: "the attacker intends to attack the competitor's weak points or blind spots, especially the market leader or direct competitor",
+      choices: { a: "Encirclement attack", b: "Frontal attack.", c: "Flank attack", d: "Bypass attack" },
+      answer: "c"
+    },
+    {
+      question: "the attacker goes head-to-head with its competitor",
+      choices: { a: "Encirclement attack", b: "Frontal attack.", c: "Flank attack", d: "Bypass attack" },
+      answer: "b"
+    },
+    {
+      question: "It means occupying the most desirable position in consumers' minds, making the brand almost impenetrable.",
+      choices: { a: "Position defense", b: "Flank defense", c: "Preemptive defense", d: "Counteroffensive defense" },
+      answer: "a"
+    },
+    {
+      question: "the defender can meet the attacker frontally and hit its flank or launch a pincer movement for the attacker to pull back to defend itself.",
+      choices: { a: "Position defense", b: "Flank defense", c: "Preemptive defense", d: "Counteroffensive defense" },
+      answer: "d"
+    },
+     {
+      question: " This tactic is any action that increases the perceived threat of reprisal for an attack. It is crucial in markets important to the defending company or business unit",
+      choices: { a: "Raise Structural Barriers", b: "Increase Expected Retaliation", c: "Lower the inducement for attack", d: "Contraction defense" },
+      answer: "b"
+    },
+    {
+      question: "It involves an overview of how the strategy looks in the present and how it is progressing over time.",
+      choices: { a: "Define Key Performance Indicators", b: "Implement consistent reports", c: "Define the strategy framework", d: "Link performance reviews to strategy" },
+      answer: "b"
+    },
+    {
+      question: "A more aggressive maneuver is to attack first, perhaps with guerrilla action across the market",
+      choices: { a: "Guerrilla defense.", b: "Mobile defense", c: "Preemptive defense", d: "Position defense" },
+      answer: "c"
+    },
+    {
+      question: "In planned contraction (also called ___), they give up weaker markets and reassign resources to stronger ones",
+      choices: { a: "acknowledgement", b: "marketing stunt", c: "strategic withdrawal", d: "draft tactics" },
+      answer: "c"
+    },
+    {
+      question: "Ghani emphasized the following attributes that an organization must address, except ",
+      choices: { a: "Strategies display systematic adaptability", b: "Strategic processes must be applied", c: "Customer offerings are effectively differentiated by the organization", d: "Constantly identify the need for new products or services" },
+      answer: "d"
+    },
+    {
+      question: "A <u>workforce</u> strategy is the organization's prioritized people plan that enables a business to be successful by attracting, developing, retaining, and inspiring the workforce",
+      choices: { a: "True", b: "Company", c: "People", d: "Business" },
+      answer: "c"
+    },
+     {
+      question: "In this process, it is vital to keep all evaluation methods as consistent as possible.",
+      choices: { a: "Track and adjust", b: "Start with a vision and some data", c: "Streamline", d: "Monitor the culture" },
+      answer: "b"
+    },
+    {
+      question: "The management should continually be on the lookout for new tools, software, and equipment that improve critical processes",
+      choices: { a: "Track and adjust", b: "Start with a vision and some data", c: "Streamline", d: "Monitor the culture" },
+      answer: "c"
+    },
+    {
+      question: "The following outlines the process of setting the climate for culture as a competitive advantage, except",
+      choices: { a: "Align the culture", b: "Monitor the culture", c: "Examine the culture", d: "Define the culture"},
+      answer: "c"
+    },
+    {
+      question: "Business leaders and the line people must create specific alternative courses of action for the business to overcome obstacles encountered in reaching goals and objectives",
+      choices: { a: "Set targets", b: "Create contingency plans", c: "Develop action plans", d: "Identify the problems and outcomes" },
+      answer: "b"
+    },
+    {
+      question: "The following are the purpose of the People Strategy, except",
+      choices: { a: "It ensures that the strategy makes sense and can inspire the workforce", b: "It provides a framework for identifying and developing leadership talent", c: "It fills the leadership pipeline with the basis of a strong succession plan", d: "It evaluates individuals accurately and in-depth"},
+      answer: "a"
+    },
+    {
+      question: "Business leaders must be aware of their customers' needs and buying behaviors",
+      choices: { a: "Assessment of external environment", b: "Understanding existing markets", c: "Assessment of business capabilities", d: "Determining critical issues" },
+      answer: "b"
+    },
+    {
+      question: "Business leaders must identify the organizational problems that may affect the business's future growth",
+      choices: { a: "Assessment of external environment", b: "Understanding existing markets", c: "Assessment of business capabilities", d: "Determining critical issues" },
+      answer: "d"
+    },
+    {
+      question: "Business leaders must examine everything from economic and demographic trends and regulatory shifts to new technologies",
+      choices: { a: "Assessment of external environment", b: "Understanding existing markets", c: "Assessment of business capabilities", d: "Determining critical issues" },
+      answer: "a"
+    },
+    {
+      question: "___ is essential and must come from various people in various roles and disciplines",
+      choices: { a: "Strategy", b: "Objective", c: "Feedback", d: "Contingency" },
+      answer: "c"
+    },
+    {
+      question: "Developing a sustainable advantage for the company is what every CEO wants to achieve",
+      choices: { a: "strategic planning process", b: "people strategy", c: "culture as competitive advantage", d: "set targets" },
+      answer: "c"
+    },
+    {
+      question: "Business leaders must continuously monitor the emergence of new entrants with more attractive value propositions for their customers",
+      choices: { a: "Identifying growth opportunities", b: "Understanding existing markets", c: "Assessment of business capabilities", d: "Recognizing the competition" },
+      answer: "d"
+    },
+    {
+      question: "Business leaders must assess the needs of their organization to gain potential progress and development",
+      choices: { a: "Identifying growth opportunities", b: "Understanding existing markets", c: "Assessment of business capabilities", d: "Recognizing the competition" },
+      answer: "a"
+    },
+    {
+      question: "A good strategic planning process requires attention to the actual execution of the strategy, not a compilation of ___",
+      choices: { a: "market trends", b: "forecasted numbers", c: "competitive advantage", d: "goals and objectives" },
+      answer: "b"
+    },
+    
+  ];
+
+  const questionContainer = document.getElementById("questionContainer");
+  const bubbleCol1 = document.getElementById("bubbleCol1");
+  const bubbleCol2 = document.getElementById("bubbleCol2");
+  const correctAnswers = {};
+  const totalQuestions = questions.length;
+
+  questions.forEach((q, i) => {
+    const num = i + 1;
+    correctAnswers[num] = q.answer;
+
+    const qDiv = document.createElement("div");
+    qDiv.className = "question";
+    qDiv.innerHTML = `
+      <strong>${num}. ${q.question}</strong><br>
+      <label><input type="radio" name="q${num}" value="a" onclick="markBubble(${num}, 'a')"> ${q.choices.a}</label>
+      <label><input type="radio" name="q${num}" value="b" onclick="markBubble(${num}, 'b')"> ${q.choices.b}</label>
+      <label><input type="radio" name="q${num}" value="c" onclick="markBubble(${num}, 'c')"> ${q.choices.c}</label>
+      <label><input type="radio" name="q${num}" value="d" onclick="markBubble(${num}, 'd')"> ${q.choices.d}</label>
+    `;
+    questionContainer.appendChild(qDiv);
+
+    const bubbleRow = document.createElement("div");
+    bubbleRow.className = "bubble";
+    bubbleRow.innerHTML = `
+      ${num}.
+      <span id="b${num}a"></span>
+      <span id="b${num}b"></span>
+      <span id="b${num}c"></span>
+      <span id="b${num}d"></span>
+    `;
+    (num <= 15 ? bubbleCol1 : bubbleCol2).appendChild(bubbleRow);
+  });
+
+  function markBubble(qNum, choice) {
+    ['a', 'b', 'c', 'd'].forEach(letter => {
+      const el = document.getElementById(`b${qNum}${letter}`);
+      el.classList.remove('filled');
+    });
+    const selected = document.getElementById(`b${qNum}${choice}`);
+    if (selected) selected.classList.add('filled');
+  }
+
+  // Timer Logic
+  const totalTime = 10 * 60; // 30 minutes in seconds
+  let timeLeft = totalTime;
+  const timerText = document.getElementById("timerText");
+  const progressCircle = document.getElementById("progressCircle");
+  const radius = 45;
+  const circumference = 2 * Math.PI * radius;
+  progressCircle.style.strokeDasharray = circumference;
+
+  function updateTimer() {
+    const minutes = Math.floor(timeLeft / 60);
+    const seconds = timeLeft % 60;
+    timerText.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+    const offset = circumference - (timeLeft / totalTime) * circumference;
+    progressCircle.style.strokeDashoffset = offset;
+  }
+
+  const timerInterval = setInterval(() => {
+    updateTimer();
+    if (timeLeft <= 0) {
+      clearInterval(timerInterval);
+      alert("Time is up! Submitting your quiz.");
+      document.getElementById("submitBtn").click();
+      document.getElementById("submitBtn").disabled = true;
+    }
+    timeLeft--;
+  }, 1000);
+
+  // Submit logic
+  document.getElementById("submitBtn").addEventListener("click", () => {
+    const name = document.getElementById("name").value.trim();
+    const section = document.getElementById("section").value.trim();
+    const subject = document.getElementById("subject").value.trim();
+
+    const music = document.getElementById("bg-music");
+    if (music.paused) {
+      music.play().catch(err => {
+        console.warn("Autoplay was blocked:", err);
+      });
+    }
+
+    if (!name || !section || !subject) {
+      alert("Please fill in Name, Section, and Subject.");
+      return;
+    }
+
+    let correct = 0, wrong = 0, unanswered = 0, feedback = "";
+
+    for (let i = 1; i <= totalQuestions; i++) {
+      const selected = document.querySelector(`input[name="q${i}"]:checked`);
+      if (selected) {
+        if (selected.value === correctAnswers[i]) {
+          correct++;
+        } else {
+          wrong++;
+          feedback += `❌ Q${i} (Your answer: ${selected.value}, Correct: ${correctAnswers[i]})<br>`;
+        }
+      } else {
+        unanswered++;
+        feedback += `⚠️ Q${i} was not answered (Correct: ${correctAnswers[i]})<br>`;
+      }
+    }
+
+    const summary = `
+      <p><strong>Name:</strong> ${name}</p>
+      <p><strong>Section:</strong> ${section}</p>
+      <p><strong>Subject:</strong> ${subject}</p>
+      <p><strong>Score:</strong> ${correct}/${totalQuestions}</p>
+      <p><strong>Correct:</strong> ${correct}</p>
+      <p><strong>Wrong:</strong> ${wrong}</p>
+      <p><strong>Unanswered:</strong> ${unanswered}</p>
+      <hr>
+      <div>${feedback}</div>
+    `;
+
+    document.getElementById("scoreSummary").innerHTML = summary;
+  });
+
+  updateTimer(); // Initialize timer immediately
+</script>
+
+</body>
+</html>
