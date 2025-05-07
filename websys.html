@@ -175,11 +175,6 @@ const questions = [
     answer: "c"
   },
   {
-    question: "What is the output of the showMsg() function in the example?",
-    choices: { a: "message 1 and message 2", b: "message 2", c: "message 1", d: "No output" },
-    answer: "c"
-  },
-  {
     question: "What is the purpose of the return value in a function?",
     choices: { a: "To make the function infinite", b: "To pass a value back to the place where the function was called", c: "To pause the program", d: "To print values to the console" },
     answer: "b"
@@ -190,11 +185,6 @@ const questions = [
     answer: "c"
   },
   {
-    question: "Which line simplifies the function getMeanTemp() the most?",
-    choices: { a: "return temperatures.length / sum;", b: "return sum / temperatures.length;", c: "console.log(sum / temperatures.length);", d: "meanTemp = sum / temperatures.length;" },
-    answer: "b"
-  },
-  {
     question: "What are function parameters?",
     choices: { a: "Variables used only in loops", b: "Names given to functions", c: "Names separated by commas inside the function parentheses", d: "Values returned by a function" },
     answer: "c"
@@ -203,11 +193,6 @@ const questions = [
     question: "What are the values called that are passed into a function when it is called?",
     choices: { a: "Parameters", b: "Return values", c: "Functions", d: "Arguments" },
     answer: "d"
-  },
-  {
-    question: "Which of the following correctly passes an array to the getMeanTemp function?",
-    choices: { a: "getMeanTemp = day1", b: "console.log(getMeanTemp = day1)", c: "console.log(getMeanTemp(day1))", d: "meanTemp(getMeanTemp, day1)" },
-    answer: "c"
   },
   {
     question: "Which type of error occurs when the code is ill-formed or contains typos, like unmatched brackets?",
@@ -259,8 +244,6 @@ const questions = [
     choices: { a: "SyntaxError", b: "ReferenceError", c: "RangeError", d: "TypeError" },
     answer: "d"
   },
-
-  // Additional 10 questions
   {
     question: "What is the term for errors that occur while the script is running?",
     choices: { a: "Runtime errors", b: "Syntax errors", c: "Compile-time errors", d: "Declaration errors" },
@@ -309,6 +292,21 @@ const questions = [
   {
     question: "Which feature lets you track how a variable's value changes during execution?",
     choices: { a: "Breakpoints", b: "Step Into", c: "Watch Expressions", d: "Memory Snapshots" },
+    answer: "c"
+  },
+  {
+    question: "What is the default return value of a function that does not explicitly return anything?",
+    choices: { a: "0", b: "null", c: "undefined", d: "false" },
+    answer: "c"
+  },
+  {
+    question: "What is the main benefit of using named functions over anonymous functions in JavaScript?",
+    choices: { a: "Better performance", b: "Easier to debug with stack traces", c: "They run faster", d: "They use less memory" },
+    answer: "b"
+  },
+  {
+    question: "Which of the following is a valid arrow function syntax for a function with no parameters?",
+    choices: { a: "() -> {}", b: "{} => {}", c: "() => {}", d: "=> () {}" },
     answer: "c"
   }
 ];
