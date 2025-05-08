@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Quiz App</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      display: flex;
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+    .left {
+      width: 60%;
+      height: 100vh;
+      overflow-y: scroll;
+      padding: 20px;
+      border-right: 1px solid #ccc;
+    }
+    .right {
+      width: 40%;
+      padding: 20px;
+      position: relative;
+    }
+    .question {
+      margin-bottom: 20px;
+    }
+    .question label {
+      margin-right: 10px;
+    }
+    .bubble {
+      display: flex;
+      align-items: center;
+      margin-bottom: 5px;
+    }
+    .bubble span {
+      display: inline-block;
+      width: 14px;
+      height: 14px;
+      border: 1px solid black;
+      border-radius: 50%;
+      margin: 0 3px;
+    }
+    .filled {
+      background-color: black;
+    }
+    #bubbleWrapper {
+    display: flex;
+    justify-content: center;  /* center the columns horizontally */
+    gap: 30px;
+    margin: 20px 0;
+}
+
+    input[type="text"] {
+      width: 100%;
+      margin-bottom: 10px;
+      padding: 5px;
+    }
+    #submitBtn {
+      display: block;
+      margin: 20px auto; /* auto margins center it horizontally */
+      padding: 10px 20px;
+      background-color: green;
+      color: white;
+      font-size: 16px;
+      border: none;
+      cursor: pointer;
+    }
+    #scoreSummary {
+      margin-top: 20px;
+      font-weight: bold;
+    }
+    /* Timer Styles */
+    #timerContainer {
+      width: 120px;
+      height: 120px;
+      margin: 0 auto 20px;
+      position: relative;
+    }
+    #timerCircle {
+      width: 100%;
+      height: 100%;
+      transform: rotate(-90deg);
+    }
+    #timerCircle circle {
+      fill: none;
+      stroke-width: 10;
+    }
+    #bgCircle {
+      stroke: #eee;
+    }
+    #progressCircle {
+      stroke: red;
+      stroke-linecap: round;
+      transition: stroke-dashoffset 1s linear;
+    }
+    #timerText {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-weight: bold;
+      font-size: 18px;
+      color: red;
+    }
+    #bubbleCol1, #bubbleCol2 {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+  </style>
+</head>
+<body>
+
+<!-- Background Music -->
+<audio id="bg-music" loop>
+  <source src="congrats.mp3" type="audio/mpeg">
+  Your browser does not support the audio element.
+</audio>
+
+<!-- Left Panel -->
+<div class="left" id="questionContainer">
+    <h1>Info Assurance Reviewer</h1>
+    <h3>Type in your name, section and subject to view summary after submitting</h3>
+</div>
+
+<!-- Right Panel -->
+<div class="right">
+  <div id="timerContainer">
+    <svg id="timerCircle" viewBox="0 0 100 100">
+      <circle id="bgCircle" cx="50" cy="50" r="45"></circle>
+      <circle id="progressCircle" cx="50" cy="50" r="45" stroke-dasharray="282.6" stroke-dashoffset="0"></circle>
+    </svg>
+    <div id="timerText">30:00</div>
+  </div>
+
+  <input type="text" id="name" placeholder="NAME">
+  <input type="text" id="section" placeholder="SECTION">
+  <input type="text" id="subject" placeholder="SUBJECT">
+
+  <div id="bubbleWrapper">
+    <div id="bubbleCol1"></div>
+    <div id="bubbleCol2"></div>
+  </div>
+
+  <button id="submitBtn">SUBMIT</button>
+  <div id="scoreSummary"></div>
+</div>
+
+<script>
+  const questions = [
+    {
+      question: " ___ awareness promotes foundational understandings on cyber threats and risk, cyber hygiene, and appropriate response options",
+      choices: { a: "Network", b: "Cybersecurity", c: "Information", d: "Online Security" },
+      answer: "b"
+    },
+    {
+      question: "Adhere to copyright restrictions when downloading material from the Internet",
+      choices: { a: "Protect data on mobile devices", b: "Dispose of Information Properly", c: "Lock the computer when you leave", d: "Ethics - Be a good cyber citizen" },
+      answer: "d"
+    },
+    {
+      question: "Make sure the firewall and anti-virus are up to date",
+      choices: { a: "Protect data on mobile devices", b: "Dispose of Information Properly", c: "Lock the computer when you leave", d: "Ethics - Be a good cyber citizen" },
+      answer: "a"
+    },
+    {
+      question: "Shred hard copy confidential documents that contain personal information such as social security numbers, credit card numbers, bank account numbers, and health records",
+      choices: { a: "Protect data on mobile devices", b: "Dispose of Information Properly", c: "Lock the computer when you leave", d: "Ethics - Be a good cyber citizen" },
+      answer: "b"
+    },
+    {
+      question: "Make sure all critical information is backed up",
+      choices: { a: "Protect data on mobile devices", b: "Dispose of Information Properly", c: "Lock the computer when you leave", d: "Ethics - Be a good cyber citizen" },
+      answer: "a"
+    },
+    {
+      question: "These Simple Measures Will Help Individuals and Companies Protect Online Security, except: ",
+      choices: { a: "Use multifactor authentication", b: "Use a firewall", c: "Enable privacy settings", d: "Be sure to keep the operating system, browser, and other software locked" },
+      answer: "d"
+    },
+    {
+      question: "Check site addresses that start with “https” instead of just “http”",
+      choices: { a: "The Padlock Symbol", b: "Spot safe sites", c: "Practice safe surfing and shopping", d: "Aplication layer protocol" },
+      answer: "c"
+    },
+    {
+      question: "Numerous companies hire ethical hackers for penetration testing and vulnerability assessments",
+      choices: { a: "White Hat", b: "Black Hat", c: "Gray Hat", d: "Red Hat" },
+      answer: "a"
+    },
+    {
+      question: "They act without malicious intent; but for their fun, they exploit a security weakness in a computer system or network without the owner's permission or knowledge",
+      choices: { a: "White Hat", b: "Black Hat", c: "Gray Hat", d: "Red Hat" },
+      answer: "c"
+    },
+    {
+      question: "They are usually on the level of hacking government agencies, top-secret information hubs, and generally anything that falls under the category of sensitive information",
+      choices: { a: "White Hat", b: "Black Hat", c: "Gray Hat", d: "Red Hat" },
+      answer: "d"
+    },
+     {
+      question: "Non-expert who breaks into computer systems by using pre-packaged automated tools written by others usually with little understanding of the underlying concept,",
+      choices: { a: "Green Hat", b: "Blue Hat", c: "Hacktivist", d: "Script Kiddie" },
+      answer: "d"
+    },
+    {
+      question: "utilizes technology to announce a social, ideological, religious, or political message",
+      choices: { a: "Green Hat", b: "Blue Hat", c: "Hacktivist", d: "Script Kiddie" },
+      answer: "c"
+    },
+    {
+      question: "They look for loopholes that can be exploited and try to close these gaps",
+      choices: { a: "Green Hat", b: "Blue Hat", c: "Hacktivist", d: "Script Kiddie" },
+      answer: "b"
+    },
+    {
+      question: "These are various hacking techniques, except:",
+      choices: { a: "Password guessing and cracking", b: "SQL injection", c: "Location spoofing", d: "Network traffic sniffing" },
+      answer: "c"
+    },
+    {
+      question: "These are various hacking techniques, except:",
+      choices: { a: "Exploiting strain overflow vulnerabilities", b: "Denial-of-service attacks", c: "Session hijacking", d: "Network traffic sniffing" },
+      answer: "a"
+    },
+    {
+      question: "This is the phase where the attacker gathers information about a target using active or passive means",
+      choices: { a: "Reconnaissance", b: "Clearing Tracks", c: "Gaining Access", d: "Scanning" },
+      answer: "a"
+    },
+     {
+      question: "The attacker attempts to exploit it to enter into the system",
+      choices: { a: "Reconnaissance", b: "Clearing Tracks", c: "Gaining Access", d: "Scanning" },
+      answer: "c"
+    },
+    {
+      question: "It is a software designed to force pre-chosen ads to display on a system",
+      choices: { a: "Adware", b: "Malware", c: "Spyware", d: "Trojan " },
+      answer: "a"
+    },
+    {
+      question: "It is a self-replicating virus that does not alter files but resides in active memory and duplicates itself",
+      choices: { a: "Spam", b: "Worms", c: "Logic Bomb", d: "Buffer Overflow" },
+      answer: "b"
+    },
+    {
+      question: "this is a hidden entry to a computing device or software that bypasses security measures, such as logins and password protections",
+      choices: { a: "Exploit Kit", b: "Back Door", c: "Master Program", d: "Phreakers" },
+      answer: "b"
+    },
+    {
+      question: "enables attackers to inject client-side script into Web pages viewed by other users",
+      choices: { a: "Shrink Wrap Code", b: "Exploit", c: "Denial-of-Service Attack", d: "Cross-site Scripting" },
+      answer: "d"
+    },
+    {
+      question: "It is defined as a hi-jacked computer that is being used anonymously as a soldier for malicious activity, for example, distributing unwanted spam e-mails",
+      choices: { a: "Zombie Drone", b: "Spoofing", c: "Keystroke Logging", d: "Spam" },
+      answer: "a"
+    },
+    {
+      question: "It is an automated and the simplest kind of method to gain access to a system or website. It tries a different combination of usernames and passwords over and over until it gets in",
+      choices: { a: "SQL Injection", b: "Cross-site Scripting", c: "Denial-of-Service Attack", d: "Brute Force Attack" },
+      answer: "d"
+    },
+    {
+      question: "___ is unwanted software that infiltrates a computing device and steals Internet usage data and sensitive information",
+      choices: { a: "Spyware", b: "Adware", c: "Virus", d: "Malware" },
+      answer: "a"
+    },
+    {
+      question: "___ is a form of malicious software that, once it's taken over the computer, threatens with harm usually by denying the user access to his/her data",
+      choices: { a: "Clone Phishing", b: "Ransomware", c: "Malware", d: "Virus" },
+      answer: "b"
+    },
+    {
+      question: "Any weird data spikes could mean someone is using a backdoor on the system. To stop this, use firewalls to track inbound and outbound activities from various applications installed on the computer.",
+      choices: { a: "Choose applications and plugins carefully", b: "Use a good cybersecurity solution.", c: "Change your firewall passwords", d: "Monitor network activity." },
+      answer: "d"
+    },
+    {
+      question: "Once installed, a ___ can perform the action for which it was designed",
+      choices: { a: "Virus", b: "Master Program", c: "Shrink Wrap Code", d: "Trojan" },
+      answer: "d"
+    },
+    {
+      question: "This is the program a black hat hacker uses to transmit commands remotely to infected zombie drones, normally to carry out DoS attacks or spam attacks.",
+      choices: { a: "Zombie Drone", b: "Cracker", c: "Master Program", d: "Logic Bomb" },
+      answer: "c"
+    },
+    {
+      question: "The following will Tell if the Computer Has a Worm, except:",
+      choices: { a: "Monitor speed and performance", b: "Check for weird data spikes", c: "Be on the lookout for missing or new files.", d: "Keep an eye on the hard drive space." },
+      answer: "b"
+    },
+    {
+      question: "Web server backdoors are used for several malicious activities, except:",
+      choices: { a: "Infecting website visitors", b: "Server defacing", c: "DDOS", d: "Data theft" },
+      answer: "b"
+    },
+  ];
+
+  const questionContainer = document.getElementById("questionContainer");
+  const bubbleCol1 = document.getElementById("bubbleCol1");
+  const bubbleCol2 = document.getElementById("bubbleCol2");
+  const correctAnswers = {};
+  const totalQuestions = questions.length;
+
+  questions.forEach((q, i) => {
+    const num = i + 1;
+    correctAnswers[num] = q.answer;
+
+    const qDiv = document.createElement("div");
+    qDiv.className = "question";
+    qDiv.innerHTML = `
+      <strong>${num}. ${q.question}</strong><br>
+      <label><input type="radio" name="q${num}" value="a" onclick="markBubble(${num}, 'a')"> ${q.choices.a}</label>
+      <label><input type="radio" name="q${num}" value="b" onclick="markBubble(${num}, 'b')"> ${q.choices.b}</label>
+      <label><input type="radio" name="q${num}" value="c" onclick="markBubble(${num}, 'c')"> ${q.choices.c}</label>
+      <label><input type="radio" name="q${num}" value="d" onclick="markBubble(${num}, 'd')"> ${q.choices.d}</label>
+    `;
+    questionContainer.appendChild(qDiv);
+
+    const bubbleRow = document.createElement("div");
+    bubbleRow.className = "bubble";
+    bubbleRow.innerHTML = `
+      ${num}.
+      <span id="b${num}a"></span>
+      <span id="b${num}b"></span>
+      <span id="b${num}c"></span>
+      <span id="b${num}d"></span>
+    `;
+    (num <= 15 ? bubbleCol1 : bubbleCol2).appendChild(bubbleRow);
+  });
+
+  function markBubble(qNum, choice) {
+    ['a', 'b', 'c', 'd'].forEach(letter => {
+      const el = document.getElementById(`b${qNum}${letter}`);
+      el.classList.remove('filled');
+    });
+    const selected = document.getElementById(`b${qNum}${choice}`);
+    if (selected) selected.classList.add('filled');
+  }
+
+  // Timer Logic
+  const totalTime = 10 * 60; // 30 minutes in seconds
+  let timeLeft = totalTime;
+  const timerText = document.getElementById("timerText");
+  const progressCircle = document.getElementById("progressCircle");
+  const radius = 45;
+  const circumference = 2 * Math.PI * radius;
+  progressCircle.style.strokeDasharray = circumference;
+
+  function updateTimer() {
+    const minutes = Math.floor(timeLeft / 60);
+    const seconds = timeLeft % 60;
+    timerText.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+    const offset = circumference - (timeLeft / totalTime) * circumference;
+    progressCircle.style.strokeDashoffset = offset;
+  }
+
+  const timerInterval = setInterval(() => {
+    updateTimer();
+    if (timeLeft <= 0) {
+      clearInterval(timerInterval);
+      alert("Time is up! Submitting your quiz.");
+      document.getElementById("submitBtn").click();
+      document.getElementById("submitBtn").disabled = true;
+    }
+    timeLeft--;
+  }, 1000);
+
+  // Submit logic
+  document.getElementById("submitBtn").addEventListener("click", () => {
+    const name = document.getElementById("name").value.trim();
+    const section = document.getElementById("section").value.trim();
+    const subject = document.getElementById("subject").value.trim();
+
+    const music = document.getElementById("bg-music");
+    if (music.paused) {
+      music.play().catch(err => {
+        console.warn("Autoplay was blocked:", err);
+      });
+    }
+
+    if (!name || !section || !subject) {
+      alert("Please fill in Name, Section, and Subject.");
+      return;
+    }
+
+    let correct = 0, wrong = 0, unanswered = 0, feedback = "";
+
+    for (let i = 1; i <= totalQuestions; i++) {
+      const selected = document.querySelector(`input[name="q${i}"]:checked`);
+      if (selected) {
+        if (selected.value === correctAnswers[i]) {
+          correct++;
+        } else {
+          wrong++;
+          feedback += `❌ Q${i} (Your answer: ${selected.value}, Correct: ${correctAnswers[i]})<br>`;
+        }
+      } else {
+        unanswered++;
+        feedback += `⚠️ Q${i} was not answered (Correct: ${correctAnswers[i]})<br>`;
+      }
+    }
+
+    const summary = `
+      <p><strong>Name:</strong> ${name}</p>
+      <p><strong>Section:</strong> ${section}</p>
+      <p><strong>Subject:</strong> ${subject}</p>
+      <p><strong>Score:</strong> ${correct}/${totalQuestions}</p>
+      <p><strong>Correct:</strong> ${correct}</p>
+      <p><strong>Wrong:</strong> ${wrong}</p>
+      <p><strong>Unanswered:</strong> ${unanswered}</p>
+      <hr>
+      <div>${feedback}</div>
+    `;
+
+    document.getElementById("scoreSummary").innerHTML = summary;
+  });
+
+  updateTimer(); // Initialize timer immediately
+</script>
+
+</body>
+</html>
