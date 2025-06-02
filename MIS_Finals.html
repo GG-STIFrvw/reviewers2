@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Quiz App</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      display: flex;
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+    .left {
+      width: 60%;
+      height: 100vh;
+      overflow-y: scroll;
+      padding: 20px;
+      border-right: 1px solid #ccc;
+    }
+    .right {
+      width: 40%;
+      padding: 20px;
+      position: relative;
+    }
+    .question {
+      margin-bottom: 20px;
+    }
+    .question label {
+      margin-right: 10px;
+    }
+    .bubble {
+      display: flex;
+      align-items: center;
+      margin-bottom: 5px;
+    }
+    .bubble span {
+      display: inline-block;
+      width: 14px;
+      height: 14px;
+      border: 1px solid black;
+      border-radius: 50%;
+      margin: 0 3px;
+    }
+    .filled {
+      background-color: black;
+    }
+    #bubbleWrapper {
+    display: flex;
+  justify-content: center;  /* center the columns horizontally */
+  gap: 30px;
+  margin: 20px 0;
+}
+
+    input[type="text"] {
+      width: 100%;
+      margin-bottom: 10px;
+      padding: 5px;
+    }
+    #submitBtn {
+      display: block;
+      margin: 20px auto; /* auto margins center it horizontally */
+      padding: 10px 20px;
+      background-color: green;
+      color: white;
+      font-size: 16px;
+      border: none;
+      cursor: pointer;
+    }
+    #scoreSummary {
+      margin-top: 20px;
+      font-weight: bold;
+    }
+    /* Timer Styles */
+    #timerContainer {
+      width: 120px;
+      height: 120px;
+      margin: 0 auto 20px;
+      position: relative;
+    }
+    #timerCircle {
+      width: 100%;
+      height: 100%;
+      transform: rotate(-90deg);
+    }
+    #timerCircle circle {
+      fill: none;
+      stroke-width: 10;
+    }
+    #bgCircle {
+      stroke: #eee;
+    }
+    #progressCircle {
+      stroke: red;
+      stroke-linecap: round;
+      transition: stroke-dashoffset 1s linear;
+    }
+    #timerText {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-weight: bold;
+      font-size: 18px;
+      color: red;
+    }
+    #bubbleCol1, #bubbleCol2 {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+  </style>
+</head>
+<body>
+
+<!-- Background Music -->
+<audio id="bg-music" loop>
+  <source src="congrats.mp3" type="audio/mpeg">
+  Your browser does not support the audio element.
+</audio>
+
+<!-- Left Panel -->
+<div class="left" id="questionContainer">
+    <h1>MIS Finals Reviewer</h1>
+    <h3>Type in your name, section and subject to view summary after submitting</h3>
+</div>
+
+<!-- Right Panel -->
+<div class="right">
+  <div id="timerContainer">
+    <svg id="timerCircle" viewBox="0 0 100 100">
+      <circle id="bgCircle" cx="50" cy="50" r="45"></circle>
+      <circle id="progressCircle" cx="50" cy="50" r="45" stroke-dasharray="282.6" stroke-dashoffset="0"></circle>
+    </svg>
+    <div id="timerText">30:00</div>
+  </div>
+
+  <input type="text" id="name" placeholder="NAME">
+  <input type="text" id="section" placeholder="SECTION">
+  <input type="text" id="subject" placeholder="SUBJECT">
+
+  <div id="bubbleWrapper">
+    <div id="bubbleCol1"></div>
+    <div id="bubbleCol2"></div>
+  </div>
+
+  <button id="submitBtn">SUBMIT</button>
+  <div id="scoreSummary"></div>
+</div>
+
+<script>
+  const questions = [
+    {
+      question: "A type of information system that helps executives make better decisions using historical and current data from internal and external sources",
+      choices: { a: "Management Information System", b: "Decision Support System", c: "Executive Support System", d: "Group Decision Support System" },
+      answer: "b"
+    },
+    {
+      question: "This system emphasizes access and manipulation of large amounts of internal and/or external data for decision-making",
+      choices: { a: "Model-Driven DSS", b: "Knowledge-Driven DSS", c: "Data-Driven DSS", d: "Document-Driven DSS" },
+      answer: "c"
+    },
+    {
+      question: "A DSS that focuses on knowledge as its primary framework factor, suggesting or recommending actions to managers",
+      choices: { a: "Model-Driven DSS", b: "Knowledge-Driven DSS", c: "Data-Driven DSS", d: "Document-Driven DSS" },
+      answer: "b"
+    },
+    {
+      question: "This system integrates storage and processing technologies to provide retrieval and analysis of unstructured digital documents and web pages",
+      choices: { a: "Model-Driven DSS", b: "Knowledge-Driven DSS", c: "Data-Driven DSS", d: "Document-Driven DSS" },
+      answer: "d"
+    },
+    {
+      question: "A type of DSS that emphasizes communication, collaboration, and decision support technologies for group decision-making",
+      choices: { a: "Communications-Driven DSS", b: "Knowledge-Driven DSS", c: "Data-Driven DSS", d: "Document-Driven DSS" },
+      answer: "a"
+    },
+    {
+      question: "This system helps organization managers and executives reach a consensus during collaborative decision-making events",
+      choices: { a: "Management Information System", b: "Decision Support System", c: "Executive Support System", d: "Group Decision Support System" },
+      answer: "d"
+    },
+    {
+      question: "A GDSS tool that facilitates the creation of proposals, ideas, and solutions, potentially allowing anonymous submissions to eliminate office politics",
+      choices: { a: "Questionnaire Tools", b: "Electronic Brainstorming", c: "Stakeholder Identification", d: "Group Dictionaries" },
+      answer: "b"
+    },
+    {
+      question: "This GDSS element ensures equal opportunity for collaborators by eliminating the practice of dismissing ideas based on the presenter",
+      choices: { a: "Pre-Planning", b: "Collaboration Facilitation", c: "Evaluation Objectivity", d: "Documentation" },
+      answer: "c"
+    },
+    {
+      question: "A type of support system tailored specifically for executives, facilitating predictions and summarizing external data",
+      choices: { a: "Management Information System", b: "Decision Support System", c: "Executive Support System", d: "Group Decision Support System" },
+      answer: "c"
+    },
+    {
+      question: "This ESS role allows executives to narrow down details surrounding a decision without irrelevant data",
+      choices: { a: "Data Linking", b: "Information Filtering", c: "Executive Role Support", d: "Information Processing" },
+      answer: "b"
+    },
+    {
+      question: "A limitation of GDSS where digitized input such as typed input or digital spreadsheets is required, potentially inhibiting traditional collaboration methods",
+      choices: { a: "Moderation is Limited", b: "Digitized Input is Required", c: "Maintenance Costs may be High", d: "Requires a Facilitator" },
+      answer: "b"
+    },
+    {
+      question: "This DSS component contains menus, submenus, buttons, and icons for user interaction with the system",
+      choices: { a: "Database", b: "User Interface", c: "Models and Analytical Tools", d: "Architecture and Network" },
+      answer: "b"
+    },
+    {
+      question: "A DSS that emphasizes access to and manipulation of data models for decision-making in possible and probable situations",
+      choices: { a: "Model-Driven DSS", b: "Knowledge-Driven DSS", c: "Data-Driven DSS", d: "Document-Driven DSS" },
+      answer: "a"
+    },
+    {
+      question: "This GDSS characteristic includes conference facilities, audiovisual equipment, and networking equipment to connect collaborators",
+      choices: { a: "Hardware", b: "Software", c: "Persware/Peopleware", d: "Questionnaire Tools" },
+      answer: "a"
+    },
+    {
+      question: "An ESS disadvantage where the summarized information may be insufficient for executives to base a decision on",
+      choices: { a: "Computer Skill Requirement", b: "Long Processing Time", c: "Limitations on Summarized Information", d: "Difficulty in Maintaining Database Integrity" },
+      answer: "c"
+    },
+    {
+      question: "This DSS component holds all digitized data and information essential for the system's tasks",
+      choices: { a: "User Interface", b: "Database", c: "Models and Analytical Tools", d: "Architecture and Network" },
+      answer: "b"
+    },
+    {
+      question: "A DSS deployment technology that can be used on a mainframe computer, client/server LAN network, or web-based system architecture",
+      choices: { a: "User Interface", b: "Database", c: "Deployment Technology", d: "Models and Analytical Tools" },
+      answer: "c"
+    },
+    {
+      question: "This type of DSS targets external stakeholders such as consumers, regulators, investors, or suppliers",
+      choices: { a: "Intra-Organizational DSS", b: "Inter-Organizational DSS", c: "Function-Specific DSS", d: "General Purpose DSS" },
+      answer: "b"
+    },
+    {
+      question: "A GDSS tool that determines the impact of the group's decision and may weigh each collaborator's vote",
+      choices: { a: "Questionnaire Tools", b: "Electronic Brainstorming", c: "Stakeholder Identification", d: "Group Dictionaries" },
+      answer: "c"
+    },
+    {
+      question: "This GDSS element handles the agendas and goals of a decision-making meeting",
+      choices: { a: "Pre-Planning", b: "Collaboration Facilitation", c: "Evaluation Objectivity", d: "Documentation" },
+      answer: "a"
+    },
+    {
+      question: "An ESS benefit that allows executives to navigate and use the system without in-depth computer experience",
+      choices: { a: "Flexibility", b: "Simplicity", c: "Information Processing", d: "Data Linking" },
+      answer: "b"
+    },
+    {
+      question: "This DSS type is designed to support specific functions for specific industries or businesses",
+      choices: { a: "Intra-Organizational DSS", b: "Inter-Organizational DSS", c: "Function-Specific DSS", d: "General Purpose DSS" },
+      answer: "c"
+    },
+    {
+      question: "A GDSS limitation where the cost of maintaining a high-end facility may offset the system's cost-saving benefits",
+      choices: { a: "Digitized Input is Required", b: "Moderation is Limited", c: "Maintenance Costs may be High", d: "Requires a Facilitator" },
+      answer: "c"
+    },
+    {
+      question: "This ESS role supports interpersonal, informational, and decisional roles of executives",
+      choices: { a: "Data Linking", b: "Information Filtering", c: "Executive Role Support", d: "Information Processing" },
+      answer: "c"
+    },
+    {
+      question: "A DSS component that includes technical tools to accomplish the system's scope and tasks",
+      choices: { a: "User Interface", b: "Database", c: "Models and Analytical Tools", d: "Architecture and Network" },
+      answer: "c"
+    },
+    {
+      question: "This type of DSS can be considered a hybrid by having more than one primary framework factor",
+      choices: { a: "Data-Driven DSS", b: "Model-Driven DSS", c: "Knowledge-Driven DSS", d: "Hybrid DSS" },
+      answer: "d"
+    },
+    {
+      question: "A GDSS tool that reduces a problem into distinct interpretations to aid decision-making",
+      choices: { a: "Questionnaire Tools", b: "Electronic Brainstorming", c: "Stakeholder Identification", d: "Group Dictionaries" },
+      answer: "d"
+    },
+    {
+      question: "This ESS disadvantage assumes executives and senior managers know how to operate computers",
+      choices: { a: "Computer Skill Requirement", b: "Long Processing Time", c: "Limitations on Summarized Information", d: "Difficulty in Maintaining Database Integrity" },
+      answer: "a"
+    },
+    {
+      question: "A GDSS element that logs information such as meeting minutes and decisions for geographically challenged members",
+      choices: { a: "Pre-Planning", b: "Collaboration Facilitation", c: "Evaluation Objectivity", d: "Documentation" },
+      answer: "d"
+    },
+    {
+      question: "This DSS type emphasizes access to internal users like employees, executives, and managers",
+      choices: { a: "Intra-Organizational DSS", b: "Inter-Organizational DSS", c: "Function-Specific DSS", d: "General Purpose DSS" },
+      answer: "a"
+    }
+  ];
+
+  const questionContainer = document.getElementById("questionContainer");
+  const bubbleCol1 = document.getElementById("bubbleCol1");
+  const bubbleCol2 = document.getElementById("bubbleCol2");
+  const correctAnswers = {};
+  const totalQuestions = questions.length;
+
+  questions.forEach((q, i) => {
+    const num = i + 1;
+    correctAnswers[num] = q.answer;
+
+    const qDiv = document.createElement("div");
+    qDiv.className = "question";
+    qDiv.innerHTML = `
+      <strong>${num}. ${q.question}</strong><br>
+      <label><input type="radio" name="q${num}" value="a" onclick="markBubble(${num}, 'a')"> ${q.choices.a}</label>
+      <label><input type="radio" name="q${num}" value="b" onclick="markBubble(${num}, 'b')"> ${q.choices.b}</label>
+      <label><input type="radio" name="q${num}" value="c" onclick="markBubble(${num}, 'c')"> ${q.choices.c}</label>
+      <label><input type="radio" name="q${num}" value="d" onclick="markBubble(${num}, 'd')"> ${q.choices.d}</label>
+    `;
+    questionContainer.appendChild(qDiv);
+
+    const bubbleRow = document.createElement("div");
+    bubbleRow.className = "bubble";
+    bubbleRow.innerHTML = `
+      ${num}.
+      <span id="b${num}a"></span>
+      <span id="b${num}b"></span>
+      <span id="b${num}c"></span>
+      <span id="b${num}d"></span>
+    `;
+    (num <= 15 ? bubbleCol1 : bubbleCol2).appendChild(bubbleRow);
+  });
+
+  function markBubble(qNum, choice) {
+    ['a', 'b', 'c', 'd'].forEach(letter => {
+      const el = document.getElementById(`b${qNum}${letter}`);
+      el.classList.remove('filled');
+    });
+    const selected = document.getElementById(`b${qNum}${choice}`);
+    if (selected) selected.classList.add('filled');
+  }
+
+  // Timer Logic
+  const totalTime = 10 * 60; // 30 minutes in seconds
+  let timeLeft = totalTime;
+  const timerText = document.getElementById("timerText");
+  const progressCircle = document.getElementById("progressCircle");
+  const radius = 45;
+  const circumference = 2 * Math.PI * radius;
+  progressCircle.style.strokeDasharray = circumference;
+
+  function updateTimer() {
+    const minutes = Math.floor(timeLeft / 60);
+    const seconds = timeLeft % 60;
+    timerText.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+    const offset = circumference - (timeLeft / totalTime) * circumference;
+    progressCircle.style.strokeDashoffset = offset;
+  }
+
+  const timerInterval = setInterval(() => {
+    updateTimer();
+    if (timeLeft <= 0) {
+      clearInterval(timerInterval);
+      alert("Time is up! Submitting your quiz.");
+      document.getElementById("submitBtn").click();
+      document.getElementById("submitBtn").disabled = true;
+    }
+    timeLeft--;
+  }, 1000);
+
+  // Submit logic
+  document.getElementById("submitBtn").addEventListener("click", () => {
+    const name = document.getElementById("name").value.trim();
+    const section = document.getElementById("section").value.trim();
+    const subject = document.getElementById("subject").value.trim();
+
+    const music = document.getElementById("bg-music");
+    if (music.paused) {
+      music.play().catch(err => {
+        console.warn("Autoplay was blocked:", err);
+      });
+    }
+
+    if (!name || !section || !subject) {
+      alert("Please fill in Name, Section, and Subject.");
+      return;
+    }
+
+    let correct = 0, wrong = 0, unanswered = 0, feedback = "";
+
+    for (let i = 1; i <= totalQuestions; i++) {
+      const selected = document.querySelector(`input[name="q${i}"]:checked`);
+      if (selected) {
+        if (selected.value === correctAnswers[i]) {
+          correct++;
+        } else {
+          wrong++;
+          feedback += `❌ Q${i} (Your answer: ${selected.value}, Correct: ${correctAnswers[i]})<br>`;
+        }
+      } else {
+        unanswered++;
+        feedback += `⚠️ Q${i} was not answered (Correct: ${correctAnswers[i]})<br>`;
+      }
+    }
+
+    const summary = `
+      <p><strong>Name:</strong> ${name}</p>
+      <p><strong>Section:</strong> ${section}</p>
+      <p><strong>Subject:</strong> ${subject}</p>
+      <p><strong>Score:</strong> ${correct}/${totalQuestions}</p>
+      <p><strong>Correct:</strong> ${correct}</p>
+      <p><strong>Wrong:</strong> ${wrong}</p>
+      <p><strong>Unanswered:</strong> ${unanswered}</p>
+      <hr>
+      <div>${feedback}</div>
+    `;
+
+    document.getElementById("scoreSummary").innerHTML = summary;
+  });
+
+  updateTimer(); // Initialize timer immediately
+</script>
+
+</body>
+</html>
