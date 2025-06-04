@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Quiz App</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+        background-color: rgb(66, 66, 66);
+      display: flex;
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+
+    input[type="text"] {
+    background-color: #ccc;
+    }
+
+    .left {
+      width: 60%;
+      height: 100vh;
+      overflow-y: scroll;
+      padding: 20px;
+      border-right: 1px solid #ccc;
+    }
+    .right {
+      width: 40%;
+      padding: 20px;
+      position: relative;
+    }
+    .question {
+      margin-bottom: 20px;
+    }
+    .question label {
+      margin-right: 10px;
+    }
+    .bubble {
+      display: flex;
+      align-items: center;
+      margin-bottom: 5px;
+    }
+    .bubble span {
+      display: inline-block;
+      width: 14px;
+      height: 14px;
+      border: 1px solid black;
+      border-radius: 50%;
+      margin: 0 3px;
+    }
+    .filled {
+      background-color: black;
+    }
+    #bubbleWrapper {
+    display: flex;
+  justify-content: center;  /* center the columns horizontally */
+  gap: 30px;
+  margin: 20px 0;
+}
+
+    input[type="text"] {
+      width: 100%;
+      margin-bottom: 10px;
+      padding: 5px;
+    }
+    #submitBtn {
+      display: block;
+      margin: 20px auto; /* auto margins center it horizontally */
+      padding: 10px 20px;
+      background-color: green;
+      color: white;
+      font-size: 16px;
+      border: none;
+      cursor: pointer;
+    }
+    #scoreSummary {
+      margin-top: 20px;
+      font-weight: bold;
+    }
+    /* Timer Styles */
+    #timerContainer {
+      width: 120px;
+      height: 120px;
+      margin: 0 auto 20px;
+      position: relative;
+    }
+    #timerCircle {
+      width: 100%;
+      height: 100%;
+      transform: rotate(-90deg);
+    }
+    #timerCircle circle {
+      fill: none;
+      stroke-width: 10;
+    }
+    #bgCircle {
+      stroke: #eee;
+    }
+    #progressCircle {
+      stroke: red;
+      stroke-linecap: round;
+      transition: stroke-dashoffset 1s linear;
+    }
+    #timerText {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-weight: bold;
+      font-size: 18px;
+      color: red;
+    }
+    #bubbleCol1, #bubbleCol2 {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+  </style>
+</head>
+<body>
+
+<!-- Background Music -->
+<audio id="bg-music" loop>
+  <source src="congrats.mp3" type="audio/mpeg">
+  Your browser does not support the audio element.
+</audio>
+
+<!-- Left Panel -->
+<div class="left" id="questionContainer">
+    <h1>Mob Sys Final Reviewer</h1>
+    <h3>Type in your name, section and subject to view summary after submitting</h3>
+</div>
+
+<!-- Right Panel -->
+<div class="right">
+  <div id="timerContainer">
+    <svg id="timerCircle" viewBox="0 0 100 100">
+      <circle id="bgCircle" cx="50" cy="50" r="45"></circle>
+      <circle id="progressCircle" cx="50" cy="50" r="45" stroke-dasharray="282.6" stroke-dashoffset="0"></circle>
+    </svg>
+    <div id="timerText">30:00</div>
+  </div>
+
+  <input type="text" id="name" placeholder="NAME">
+  <input type="text" id="section" placeholder="SECTION">
+  <input type="text" id="subject" placeholder="SUBJECT">
+
+  <div id="bubbleWrapper">
+    <div id="bubbleCol1"></div>
+    <div id="bubbleCol2"></div>
+  </div>
+
+  <button id="submitBtn">SUBMIT</button>
+  <div id="scoreSummary"></div>
+</div>
+
+<script>
+
+const questions = [
+  {
+    question: "Which Android data storage option stores key-value pairs for private primitive data?",
+    choices: { a: "SQLite", b: "Shared Preferences", c: "Room Library", d: "Cloud Backup" },
+    answer: "b"
+  },
+  {
+    question: "Which storage is not always available on an Android device?",
+    choices: { a: "Internal storage", b: "Cloud backup", c: "External storage", d: "SQLite" },
+    answer: "c"
+  },
+  {
+    question: "Which method returns the directory for permanent storage in internal memory?",
+    choices: { a: "getCacheDir()", b: "getFilesDir()", c: "getStorage()", d: "getDataPath()" },
+    answer: "b"
+  },
+  {
+    question: "Which Android data storage option automatically syncs with a network database?",
+    choices: { a: "Room persistence library", b: "Shared preferences", c: "Custom data store", d: "SQLite" },
+    answer: "a"
+  },
+  {
+    question: "What method is used to delete a file in internal storage?",
+    choices: { a: "remove()", b: "deleteFile()", c: "delete()", d: "clear()" },
+    answer: "c"
+  },
+  {
+    question: "Which directory is recommended for small, temporary files under 1MB?",
+    choices: { a: "getFilesDir()", b: "getTempDir()", c: "getCacheDir()", d: "getStorageDir()" },
+    answer: "c"
+  },
+  {
+    question: "Which file permission is needed to write to external storage?",
+    choices: { a: "READ_INTERNAL_STORAGE", b: "WRITE_EXTERNAL_STORAGE", c: "ACCESS_FILES", d: "MODIFY_STORAGE" },
+    answer: "b"
+  },
+  {
+    question: "Where should the shared preferences file be created?",
+    choices: { a: "onDestroy()", b: "onPause()", c: "onCreate()", d: "onResume()" },
+    answer: "c"
+  },
+  {
+    question: "Which method commits changes to shared preferences asynchronously?",
+    choices: { a: "save()", b: "apply()", c: "commit()", d: "submit()" },
+    answer: "b"
+  },
+  {
+    question: "Which class is used to access shared preferences?",
+    choices: { a: "PreferencesManager", b: "PreferencesFile", c: "SharedPreferences", d: "SettingsManager" },
+    answer: "c"
+  },
+  {
+    question: "What method is used to retrieve a String from shared preferences?",
+    choices: { a: "getString()", b: "readString()", c: "pullString()", d: "fetchString()" },
+    answer: "a"
+  },
+  {
+    question: "Which storage type is best for files you want to share with other apps?",
+    choices: { a: "Cloud storage", b: "Internal storage", c: "External storage", d: "SQLite database" },
+    answer: "c"
+  },
+  {
+    question: "Which library stores preferences using the Preferences API in a specific location?",
+    choices: { a: "Custom data store", b: "Room", c: "SharedPreferences", d: "SQLManager" },
+    answer: "a"
+  },
+  {
+    question: "Which Android storage is a NoSQL cloud database?",
+    choices: { a: "Room", b: "SQLite", c: "Firebase Realtime Database", d: "Custom store" },
+    answer: "c"
+  },
+  {
+    question: "Which method opens or creates a local SQLite database?",
+    choices: { a: "openDatabase()", b: "newDatabase()", c: "openOrCreateDatabase()", d: "connectDatabase()" },
+    answer: "c"
+  },
+  {
+    question: "What SQL command is used to create a table if it does not exist?",
+    choices: { a: "MAKE TABLE", b: "NEW TABLE", c: "CREATE TABLE IF NOT EXISTS", d: "CREATE IF MISSING" },
+    answer: "c"
+  },
+  {
+    question: "Which method runs SQL and returns a Cursor object?",
+    choices: { a: "query()", b: "rawQuery()", c: "runSQL()", d: "fetchQuery()" },
+    answer: "b"
+  },
+  {
+    question: "Which of the following describes SQLite as 'self-contained'?",
+    choices: { a: "Needs internet access", b: "No server required", c: "Requires special config", d: "Multi-user supported" },
+    answer: "b"
+  },
+  {
+    question: "What is used to modify values in a SharedPreferences object?",
+    choices: { a: "PreferenceEditor", b: "SharedEditor", c: "SharedPreferences.Editor", d: "PrefsModifier" },
+    answer: "c"
+  },
+  {
+    question: "Which storage type is automatically cleared when the app is uninstalled?",
+    choices: { a: "External", b: "Internal", c: "Cloud", d: "Firebase" },
+    answer: "b"
+  },
+  {
+    question: "Which method adds a String to SharedPreferences?",
+    choices: { a: "putText()", b: "setString()", c: "putString()", d: "addString()" },
+    answer: "c"
+  },
+  {
+    question: "To retrieve an int from shared preferences, which method is used?",
+    choices: { a: "getNumber()", b: "getInt()", c: "getInteger()", d: "pullInt()" },
+    answer: "b"
+  },
+  {
+    question: "Which method removes a specific key-value pair in SharedPreferences?",
+    choices: { a: "editor.clear()", b: "editor.remove()", c: "editor.delete()", d: "editor.cut()" },
+    answer: "b"
+  },
+  {
+    question: "To remove all entries in SharedPreferences, use:",
+    choices: { a: "editor.removeAll()", b: "editor.clear()", c: "editor.reset()", d: "editor.drop()" },
+    answer: "b"
+  },
+  {
+    question: "What is the function of the apply() method?",
+    choices: { a: "Closes shared preferences", b: "Clears memory", c: "Commits changes", d: "Creates preferences" },
+    answer: "c"
+  },
+  {
+    question: "Which method returns the app's private cache directory?",
+    choices: { a: "getCacheDir()", b: "getTempDir()", c: "getDataCache()", d: "getPrivateCache()" },
+    answer: "a"
+  },
+  {
+    question: "What type of database is Firebase Realtime Database?",
+    choices: { a: "Relational", b: "In-memory", c: "NoSQL", d: "Graph" },
+    answer: "c"
+  },
+  {
+    question: "What Android storage option syncs data even when offline?",
+    choices: { a: "Room", b: "SQLite", c: "Firebase Realtime Database", d: "Shared Preferences" },
+    answer: "c"
+  },
+  {
+    question: "What is the default access mode for openFileOutput?",
+    choices: { a: "MODE_PUBLIC", b: "MODE_PRIVATE", c: "MODE_READ", d: "MODE_WRITE" },
+    answer: "b"
+  },
+  {
+    question: "Which SQL clause retrieves all columns from the student table?",
+    choices: { a: "SELECT ALL student", b: "GET * student", c: "SELECT * FROM student", d: "FETCH * student" },
+    answer: "c"
+  }
+];
+
+
+
+  const questionContainer = document.getElementById("questionContainer");
+  const bubbleCol1 = document.getElementById("bubbleCol1");
+  const bubbleCol2 = document.getElementById("bubbleCol2");
+  const correctAnswers = {};
+  const totalQuestions = questions.length;
+
+  questions.forEach((q, i) => {
+    const num = i + 1;
+    correctAnswers[num] = q.answer;
+
+    const qDiv = document.createElement("div");
+    qDiv.className = "question";
+    qDiv.innerHTML = `
+      <strong>${num}. ${q.question}</strong><br>
+      <label><input type="radio" name="q${num}" value="a" onclick="markBubble(${num}, 'a')"> ${q.choices.a}</label>
+      <label><input type="radio" name="q${num}" value="b" onclick="markBubble(${num}, 'b')"> ${q.choices.b}</label>
+      <label><input type="radio" name="q${num}" value="c" onclick="markBubble(${num}, 'c')"> ${q.choices.c}</label>
+      <label><input type="radio" name="q${num}" value="d" onclick="markBubble(${num}, 'd')"> ${q.choices.d}</label>
+    `;
+    questionContainer.appendChild(qDiv);
+
+    const bubbleRow = document.createElement("div");
+    bubbleRow.className = "bubble";
+    bubbleRow.innerHTML = `
+      ${num}.
+      <span id="b${num}a"></span>
+      <span id="b${num}b"></span>
+      <span id="b${num}c"></span>
+      <span id="b${num}d"></span>
+    `;
+    (num <= 15 ? bubbleCol1 : bubbleCol2).appendChild(bubbleRow);
+  });
+
+  function markBubble(qNum, choice) {
+    ['a', 'b', 'c', 'd'].forEach(letter => {
+      const el = document.getElementById(`b${qNum}${letter}`);
+      el.classList.remove('filled');
+    });
+    const selected = document.getElementById(`b${qNum}${choice}`);
+    if (selected) selected.classList.add('filled');
+  }
+
+  // Timer Logic
+  const totalTime = 10 * 60; // 30 minutes in seconds
+  let timeLeft = totalTime;
+  const timerText = document.getElementById("timerText");
+  const progressCircle = document.getElementById("progressCircle");
+  const radius = 45;
+  const circumference = 2 * Math.PI * radius;
+  progressCircle.style.strokeDasharray = circumference;
+
+  function updateTimer() {
+    const minutes = Math.floor(timeLeft / 60);
+    const seconds = timeLeft % 60;
+    timerText.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+    const offset = circumference - (timeLeft / totalTime) * circumference;
+    progressCircle.style.strokeDashoffset = offset;
+  }
+
+  const timerInterval = setInterval(() => {
+    updateTimer();
+    if (timeLeft <= 0) {
+      clearInterval(timerInterval);
+      alert("Time is up! Submitting your quiz.");
+      document.getElementById("submitBtn").click();
+      document.getElementById("submitBtn").disabled = true;
+    }
+    timeLeft--;
+  }, 1000);
+
+  // Submit logic
+  document.getElementById("submitBtn").addEventListener("click", () => {
+    const name = document.getElementById("name").value.trim();
+    const section = document.getElementById("section").value.trim();
+    const subject = document.getElementById("subject").value.trim();
+
+    const music = document.getElementById("bg-music");
+    if (music.paused) {
+      music.play().catch(err => {
+        console.warn("Autoplay was blocked:", err);
+      });
+    }
+
+    if (!name || !section || !subject) {
+      alert("Please fill in Name, Section, and Subject.");
+      return;
+    }
+
+    let correct = 0, wrong = 0, unanswered = 0, feedback = "";
+
+    for (let i = 1; i <= totalQuestions; i++) {
+      const selected = document.querySelector(`input[name="q${i}"]:checked`);
+      if (selected) {
+        if (selected.value === correctAnswers[i]) {
+          correct++;
+        } else {
+          wrong++;
+          feedback += `❌ Q${i} (Your answer: ${selected.value}, Correct: ${correctAnswers[i]})<br>`;
+        }
+      } else {
+        unanswered++;
+        feedback += `⚠️ Q${i} was not answered (Correct: ${correctAnswers[i]})<br>`;
+      }
+    }
+
+    const summary = `
+      <p><strong>Name:</strong> ${name}</p>
+      <p><strong>Section:</strong> ${section}</p>
+      <p><strong>Subject:</strong> ${subject}</p>
+      <p><strong>Score:</strong> ${correct}/${totalQuestions}</p>
+      <p><strong>Correct:</strong> ${correct}</p>
+      <p><strong>Wrong:</strong> ${wrong}</p>
+      <p><strong>Unanswered:</strong> ${unanswered}</p>
+      <hr>
+      <div>${feedback}</div>
+    `;
+
+    document.getElementById("scoreSummary").innerHTML = summary;
+  });
+
+  updateTimer(); // Initialize timer immediately
+</script>
+
+</body>
+</html>
