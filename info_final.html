@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Quiz App</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      display: flex;
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+    .left {
+      width: 60%;
+      height: 100vh;
+      overflow-y: scroll;
+      padding: 20px;
+      border-right: 1px solid #ccc;
+    }
+    .right {
+      width: 40%;
+      padding: 20px;
+      position: relative;
+    }
+    .question {
+      margin-bottom: 20px;
+    }
+    .question label {
+      margin-right: 10px;
+    }
+    .bubble {
+      display: flex;
+      align-items: center;
+      margin-bottom: 5px;
+    }
+    .bubble span {
+      display: inline-block;
+      width: 14px;
+      height: 14px;
+      border: 1px solid black;
+      border-radius: 50%;
+      margin: 0 3px;
+    }
+    .filled {
+      background-color: black;
+    }
+    #bubbleWrapper {
+    display: flex;
+  justify-content: center;  /* center the columns horizontally */
+  gap: 30px;
+  margin: 20px 0;
+}
+
+    input[type="text"] {
+      width: 100%;
+      margin-bottom: 10px;
+      padding: 5px;
+    }
+    #submitBtn {
+      display: block;
+      margin: 20px auto; /* auto margins center it horizontally */
+      padding: 10px 20px;
+      background-color: green;
+      color: white;
+      font-size: 16px;
+      border: none;
+      cursor: pointer;
+    }
+    #scoreSummary {
+      margin-top: 20px;
+      font-weight: bold;
+    }
+    /* Timer Styles */
+    #timerContainer {
+      width: 120px;
+      height: 120px;
+      margin: 0 auto 20px;
+      position: relative;
+    }
+    #timerCircle {
+      width: 100%;
+      height: 100%;
+      transform: rotate(-90deg);
+    }
+    #timerCircle circle {
+      fill: none;
+      stroke-width: 10;
+    }
+    #bgCircle {
+      stroke: #eee;
+    }
+    #progressCircle {
+      stroke: red;
+      stroke-linecap: round;
+      transition: stroke-dashoffset 1s linear;
+    }
+    #timerText {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-weight: bold;
+      font-size: 18px;
+      color: red;
+    }
+    #bubbleCol1, #bubbleCol2 {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+  </style>
+</head>
+<body>
+
+<!-- Background Music -->
+<audio id="bg-music" loop>
+  <source src="congrats.mp3" type="audio/mpeg">
+  Your browser does not support the audio element.
+</audio>
+
+<!-- Left Panel -->
+<div class="left" id="questionContainer">
+    <h1>Info Assurance Finals Reviewer</h1>
+    <h3>Type in your name, section and subject to view summary after submitting</h3>
+</div>
+
+<!-- Right Panel -->
+<div class="right">
+  <div id="timerContainer">
+    <svg id="timerCircle" viewBox="0 0 100 100">
+      <circle id="bgCircle" cx="50" cy="50" r="45"></circle>
+      <circle id="progressCircle" cx="50" cy="50" r="45" stroke-dasharray="282.6" stroke-dashoffset="0"></circle>
+    </svg>
+    <div id="timerText">30:00</div>
+  </div>
+
+  <input type="text" id="name" placeholder="NAME">
+  <input type="text" id="section" placeholder="SECTION">
+  <input type="text" id="subject" placeholder="SUBJECT">
+
+  <div id="bubbleWrapper">
+    <div id="bubbleCol1"></div>
+    <div id="bubbleCol2"></div>
+  </div>
+
+  <button id="submitBtn">SUBMIT</button>
+  <div id="scoreSummary"></div>
+</div>
+
+<script>
+  const questions = [
+    {
+      question: "Which netiquette principle emphasizes applying offline societal values, such as those against hate speech and theft, to online interactions?",
+      choices: { a: "Respecting cultural differences", b: "Applying the same standards online as in public", c: "Refusing to empower abuse and harassment", d: "Maintaining transparency in information policies" },
+      answer: "b"
+    },
+    {
+      question: "In cybersecurity risk management, what is the primary purpose of characterizing a system during a risk assessment?",
+      choices: { a: "To calculate the risk rating", b: "To identify viable threats by understanding system components and data flow", c: "To implement control measures", d: "To monitor ongoing cyber risks" },
+      answer: "b"
+    },
+    {
+      question: "Which type of cyber risk is associated with negative public opinion that could damage an organization’s reputation?",
+      choices: { a: "Strategic risk", b: "Operational risk", c: "Reputational risk", d: "Compliance risk" },
+      answer: "c"
+    },
+    {
+      question: "What is a key limitation of treating cybersecurity as a compliance issue, according to the risk management document?",
+      choices: { a: "It requires excessive resources", b: "It fails to address organization-specific vulnerabilities", c: "It delegates responsibility solely to the IT department", d: "It increases the likelihood of data leakage" },
+      answer: "b"
+    },
+    {
+      question: "Which firewall feature allows organizations to consolidate network services like gateway security and content filtering on a single device?",
+      choices: { a: "Failover support", b: "Content filtering subscription", c: "Virtual Private Network (VPN) confirmation", d: "GUI-friendly administration" },
+      answer: "b"
+    },
+    {
+      question: "In the context of authentication mechanisms, what is a significant advantage of soft tokens over hard tokens?",
+      choices: { a: "They are more resistant to phishing attacks", b: "They are less expensive and easier to distribute", c: "They provide stronger encryption", d: "They require less user interaction" },
+      answer: "b"
+    },
+    {
+      question: "Which authentication mechanism uses signals like geolocation and IP address to establish user validity without requiring explicit credentials?",
+      choices: { a: "Biometric authentication", b: "Hard token authentication", c: "Contextual authentication", d: "Password authentication" },
+      answer: "c"
+    },
+    {
+      question: "What is a critical step in the security incident management process that involves learning from past incidents to improve future responses?",
+      choices: { a: "Assessing identified incidents", b: "Developing a comprehensive training program", c: "Performing post-incident analysis", d: "Establishing an incident response team" },
+      answer: "c"
+    },
+    {
+      question: "Which backup and recovery strategy step emphasizes involving users to identify sensitive data, particularly unstructured data?",
+      choices: { a: "Creating a backup and recovery strategy", b: "Testing backups regularly", c: "Identifying prime backup targets", d: "Implementing a comprehensive security strategy" },
+      answer: "c"
+    },
+    {
+      question: "In the context of firewalls, what does 'failover' refer to, and why is it critical for organizations using cloud services?",
+      choices: { a: "Content filtering to block malware, critical for secure browsing", b: "Automatic fault detection and correction for redundant connections, critical for uninterrupted cloud service access", c: "GUI-based administration, critical for ease of use", d: "Monitoring intrusion attempts, critical for security logging" },
+      answer: "b"
+    },
+    {
+      question: "Which netiquette golden rule addresses the risk of doxing by prohibiting sharing personal information without permission?",
+      choices: { a: "Be mindful of your language", b: "Respect people’s privacy", c: "Choose your emojis carefully", d: "Respect others’ views" },
+      answer: "b"
+    },
+    {
+      question: "In cybersecurity risk management, what does a 'Severe' risk rating indicate, and what is the recommended action?",
+      choices: { a: "A visible threat requiring completion within a reasonable period", b: "A significant and urgent threat requiring immediate remediation", c: "A minimal threat requiring no action", d: "A recoverable threat requiring long-term planning" },
+      answer: "b"
+    },
+    {
+      question: "Which authentication mechanism involves comparing a signal value to a previously established pattern to detect anomalies?",
+      choices: { a: "Contextual authentication", b: "Behavioral authentication", c: "Correlative authentication", d: "Device identification" },
+      answer: "b"
+    },
+    {
+      question: "What is a common pitfall in cybersecurity risk management where organizations fail to inventory their digital assets, increasing vulnerability?",
+      choices: { a: "Treating cybersecurity as a compliance issue", b: "Delegating cybersecurity to the IT department", c: "Not identifying digital assets and third-party connections", d: "Purchasing excessive security tools" },
+      answer: "c"
+    },
+    {
+      question: "Which security software is designed to identify flaws and misconfigurations in other cybersecurity defenses by operating from within the system?",
+      choices: { a: "Bitglass", b: "AttackIQ FireDrill", c: "GreatHorn", d: "SlashNext" },
+      answer: "b"
+    },
+    {
+      question: "Why is sarcasm discouraged in online communication according to netiquette guidelines?",
+      choices: { a: "It violates privacy norms", b: "It is difficult to convey accurately online", c: "It conflicts with emoji usage", d: "It promotes doxing" },
+      answer: "b"
+    },
+    {
+      question: "In risk assessment, what does a 'High' likelihood rating indicate about the threat-source and controls?",
+      choices: { a: "The threat-source lacks motivation, but controls are ineffective", b: "The threat-source is highly motivated and capable, and controls are ineffective", c: "The threat-source is motivated, but controls significantly impede exploitation", d: "The threat-source is capable, but controls prevent exploitation" },
+      answer: "b"
+    },
+    {
+      question: "Which firewall benefit reduces the likelihood of installation errors through user-friendly administration?",
+      choices: { a: "Content filtering", b: "GUI-friendly administration", c: "Failover support", d: "VPN confirmation" },
+      answer: "b"
+    },
+    {
+      question: "What is a key reason why backups must be tested regularly as part of a backup and recovery strategy?",
+      choices: { a: "To identify prime backup targets", b: "To ensure recoverability in emergencies like ransomware attacks", c: "To schedule periodic backups", d: "To encrypt sensitive data" },
+      answer: "b"
+    },
+    {
+      question: "Which authentication mechanism creates a device-specific fingerprint to detect potential fraudulent activity over repeated interactions?",
+      choices: { a: "Behavioral authentication", b: "Contextual authentication", c: "Device identification", d: "Correlative authentication" },
+      answer: "c"
+    },
+    {
+      question: "In security incident management, what is a key component of an incident response plan that ensures alignment with organizational goals?",
+      choices: { a: "Metrics for measuring effectiveness", b: "Technical support contracts", c: "Content filtering subscriptions", d: "GUI-based administration" },
+      answer: "a"
+    },
+    {
+      question: "Which netiquette principle requires acknowledging cultural differences to maintain respect in online interactions?",
+      choices: { a: "Respecting others’ views", b: "Acknowledging cultural differences", c: "Being mindful of language", d: "Choosing emojis carefully" },
+      answer: "b"
+    },
+    {
+      question: "What is a potential consequence of not resolving known system vulnerabilities in cybersecurity risk management?",
+      choices: { a: "Reduced need for employee training", b: "Increased attack surface and risk of exploitation", c: "Improved backup reliability", d: "Enhanced firewall performance" },
+      answer: "b"
+    },
+    {
+      question: "Which security software provides a dedicated phishing threat feed to block emerging phishing sites?",
+      choices: { a: "Fidelis Deception", b: "GreatHorn", c: "SlashNext", d: "JASK ASOC" },
+      answer: "c"
+    },
+    {
+      question: "In the context of incident documentation, what qualifies an event as an incident requiring reporting?",
+      choices: { a: "It involves routine system maintenance", b: "It causes significant risks or disruption to the organization", c: "It improves network performance", d: "It enhances user authentication" },
+      answer: "b"
+    },
+    {
+      question: "Which cyber risk category is associated with inadequate internal processes or systems leading to operational losses?",
+      choices: { a: "Compliance risk", b: "Operational risk", c: "Transactional risk", d: "Strategic risk" },
+      answer: "b"
+    },
+    {
+      question: "What is a key advantage of a proactive, collaborative approach to cybersecurity risk management?",
+      choices: { a: "It reduces the need for firewalls", b: "It minimizes operational disruptions and costs", c: "It eliminates the need for backups", d: "It simplifies compliance checklists" },
+      answer: "b"
+    },
+    {
+      question: "Which firewall characteristic is critical to prevent vulnerabilities due to outdated hardware?",
+      choices: { a: "Content filtering", b: "Hardware integrity", c: "Failover support", d: "Monitoring and reporting" },
+      answer: "b"
+    },
+    {
+      question: "In backup and recovery, why is user involvement critical when identifying prime backup targets?",
+      choices: { a: "Users manage encryption keys", b: "Users know more about the data they use, especially unstructured data", c: "Users schedule backups", d: "Users test recovery processes" },
+      answer: "b"
+    },
+    {
+      question: "Which authentication mechanism is vulnerable to large-scale breaches and phishing attacks when used in isolation?",
+      choices: { a: "Biometric authentication", b: "Hard tokens", c: "Soft tokens", d: "Passwords" },
+      answer: "d"
+    }
+];
+
+  const questionContainer = document.getElementById("questionContainer");
+  const bubbleCol1 = document.getElementById("bubbleCol1");
+  const bubbleCol2 = document.getElementById("bubbleCol2");
+  const correctAnswers = {};
+  const totalQuestions = questions.length;
+
+  questions.forEach((q, i) => {
+    const num = i + 1;
+    correctAnswers[num] = q.answer;
+
+    const qDiv = document.createElement("div");
+    qDiv.className = "question";
+    qDiv.innerHTML = `
+      <strong>${num}. ${q.question}</strong><br>
+      <label><input type="radio" name="q${num}" value="a" onclick="markBubble(${num}, 'a')"> ${q.choices.a}</label>
+      <label><input type="radio" name="q${num}" value="b" onclick="markBubble(${num}, 'b')"> ${q.choices.b}</label>
+      <label><input type="radio" name="q${num}" value="c" onclick="markBubble(${num}, 'c')"> ${q.choices.c}</label>
+      <label><input type="radio" name="q${num}" value="d" onclick="markBubble(${num}, 'd')"> ${q.choices.d}</label>
+    `;
+    questionContainer.appendChild(qDiv);
+
+    const bubbleRow = document.createElement("div");
+    bubbleRow.className = "bubble";
+    bubbleRow.innerHTML = `
+      ${num}.
+      <span id="b${num}a"></span>
+      <span id="b${num}b"></span>
+      <span id="b${num}c"></span>
+      <span id="b${num}d"></span>
+    `;
+    (num <= 15 ? bubbleCol1 : bubbleCol2).appendChild(bubbleRow);
+  });
+
+  function markBubble(qNum, choice) {
+    ['a', 'b', 'c', 'd'].forEach(letter => {
+      const el = document.getElementById(`b${qNum}${letter}`);
+      el.classList.remove('filled');
+    });
+    const selected = document.getElementById(`b${qNum}${choice}`);
+    if (selected) selected.classList.add('filled');
+  }
+
+  // Timer Logic
+  const totalTime = 10 * 60; // 30 minutes in seconds
+  let timeLeft = totalTime;
+  const timerText = document.getElementById("timerText");
+  const progressCircle = document.getElementById("progressCircle");
+  const radius = 45;
+  const circumference = 2 * Math.PI * radius;
+  progressCircle.style.strokeDasharray = circumference;
+
+  function updateTimer() {
+    const minutes = Math.floor(timeLeft / 60);
+    const seconds = timeLeft % 60;
+    timerText.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+    const offset = circumference - (timeLeft / totalTime) * circumference;
+    progressCircle.style.strokeDashoffset = offset;
+  }
+
+  const timerInterval = setInterval(() => {
+    updateTimer();
+    if (timeLeft <= 0) {
+      clearInterval(timerInterval);
+      alert("Time is up! Submitting your quiz.");
+      document.getElementById("submitBtn").click();
+      document.getElementById("submitBtn").disabled = true;
+    }
+    timeLeft--;
+  }, 1000);
+
+  // Submit logic
+  document.getElementById("submitBtn").addEventListener("click", () => {
+    const name = document.getElementById("name").value.trim();
+    const section = document.getElementById("section").value.trim();
+    const subject = document.getElementById("subject").value.trim();
+
+    const music = document.getElementById("bg-music");
+    if (music.paused) {
+      music.play().catch(err => {
+        console.warn("Autoplay was blocked:", err);
+      });
+    }
+
+    if (!name || !section || !subject) {
+      alert("Please fill in Name, Section, and Subject.");
+      return;
+    }
+
+    let correct = 0, wrong = 0, unanswered = 0, feedback = "";
+
+    for (let i = 1; i <= totalQuestions; i++) {
+      const selected = document.querySelector(`input[name="q${i}"]:checked`);
+      if (selected) {
+        if (selected.value === correctAnswers[i]) {
+          correct++;
+        } else {
+          wrong++;
+          feedback += `❌ Q${i} (Your answer: ${selected.value}, Correct: ${correctAnswers[i]})<br>`;
+        }
+      } else {
+        unanswered++;
+        feedback += `⚠️ Q${i} was not answered (Correct: ${correctAnswers[i]})<br>`;
+      }
+    }
+
+    const summary = `
+      <p><strong>Name:</strong> ${name}</p>
+      <p><strong>Section:</strong> ${section}</p>
+      <p><strong>Subject:</strong> ${subject}</p>
+      <p><strong>Score:</strong> ${correct}/${totalQuestions}</p>
+      <p><strong>Correct:</strong> ${correct}</p>
+      <p><strong>Wrong:</strong> ${wrong}</p>
+      <p><strong>Unanswered:</strong> ${unanswered}</p>
+      <hr>
+      <div>${feedback}</div>
+    `;
+
+    document.getElementById("scoreSummary").innerHTML = summary;
+  });
+
+  updateTimer(); // Initialize timer immediately
+</script>
+
+</body>
+</html>
