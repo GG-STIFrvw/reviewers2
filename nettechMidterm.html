@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Quiz App</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      display: flex;
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+    .left {
+      width: 60%;
+      height: 100vh;
+      overflow-y: scroll;
+      padding: 20px;
+      border-right: 1px solid #ccc;
+    }
+    .right {
+      width: 40%;
+      padding: 20px;
+      position: relative;
+    }
+    .question {
+      margin-bottom: 20px;
+    }
+    .question label {
+      margin-right: 10px;
+    }
+    .bubble {
+      display: flex;
+      align-items: center;
+      margin-bottom: 5px;
+    }
+    .bubble span {
+      display: inline-block;
+      width: 14px;
+      height: 14px;
+      border: 1px solid black;
+      border-radius: 50%;
+      margin: 0 3px;
+    }
+    .filled {
+      background-color: black;
+    }
+    #bubbleWrapper {
+    display: flex;
+  justify-content: center;  /* center the columns horizontally */
+  gap: 30px;
+  margin: 20px 0;
+}
+
+    input[type="text"] {
+      width: 100%;
+      margin-bottom: 10px;
+      padding: 5px;
+    }
+    #submitBtn {
+      display: block;
+      margin: 20px auto; /* auto margins center it horizontally */
+      padding: 10px 20px;
+      background-color: green;
+      color: white;
+      font-size: 16px;
+      border: none;
+      cursor: pointer;
+    }
+    #scoreSummary {
+      margin-top: 20px;
+      font-weight: bold;
+    }
+    /* Timer Styles */
+    #timerContainer {
+      width: 120px;
+      height: 120px;
+      margin: 0 auto 20px;
+      position: relative;
+    }
+    #timerCircle {
+      width: 100%;
+      height: 100%;
+      transform: rotate(-90deg);
+    }
+    #timerCircle circle {
+      fill: none;
+      stroke-width: 10;
+    }
+    #bgCircle {
+      stroke: #eee;
+    }
+    #progressCircle {
+      stroke: red;
+      stroke-linecap: round;
+      transition: stroke-dashoffset 1s linear;
+    }
+    #timerText {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-weight: bold;
+      font-size: 18px;
+      color: red;
+    }
+    #bubbleCol1, #bubbleCol2 {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+  </style>
+</head>
+<body>
+
+<!-- Background Music -->
+<audio id="bg-music" loop>
+  <source src="congrats.mp3" type="audio/mpeg">
+  Your browser does not support the audio element.
+</audio>
+
+<!-- Left Panel -->
+<div class="left" id="questionContainer">
+    <h1>NetTech2 Midterm Reviewer</h1>
+    <h3>Type in your name, section and subject to view summary after submitting</h3>
+</div>
+
+<!-- Right Panel -->
+<div class="right">
+  <div id="timerContainer">
+    <svg id="timerCircle" viewBox="0 0 100 100">
+      <circle id="bgCircle" cx="50" cy="50" r="45"></circle>
+      <circle id="progressCircle" cx="50" cy="50" r="45" stroke-dasharray="282.6" stroke-dashoffset="0"></circle>
+    </svg>
+    <div id="timerText">30:00</div>
+  </div>
+
+  <input type="text" id="name" placeholder="NAME">
+  <input type="text" id="section" placeholder="SECTION">
+  <input type="text" id="subject" placeholder="SUBJECT">
+
+  <div id="bubbleWrapper">
+    <div id="bubbleCol1"></div>
+    <div id="bubbleCol2"></div>
+  </div>
+
+  <button id="submitBtn">SUBMIT</button>
+  <div id="scoreSummary"></div>
+</div>
+
+<script>
+  const questions = [
+    { question: "An Elastic Cloud Server (ECS) consists of:", choices: { a: "Only memory and storage", b: "vCPUs, memory, OS, and EVS disks", c: "A GPU and database software", d: "A single physical processor" }, answer: "b" },
+
+    { question: "Which of the following is NOT an advantage of ECS?", choices: { a: "Load balancing", b: "Flexible billing", c: "Fixed hardware with no customization", d: "Cloud monitoring" }, answer: "c" },
+
+    { question: "What feature automatically adjusts compute resources in ECS?", choices: { a: "Cloud Eye", b: "Auto Scaling", c: "FunctionGraph", d: "DeH" }, answer: "b" },
+
+    { question: "GPU-accelerated ECS is most suitable for:", choices: { a: "Text editing", b: "Email management", c: "3D animation rendering and deep learning", d: "DNS management" }, answer: "c" },
+
+    { question: "A Bare Metal Server (BMS) differs from ECS mainly because:", choices: { a: "It uses only virtualized resources", b: "It is a physical server provisioned in the cloud", c: "It has no storage capabilities", d: "It cannot connect to a VPC" }, answer: "b" },
+
+    { question: "Which Huawei architecture enhances BMS performance?", choices: { a: "QingTian", b: "Kubernetes", c: "Hyper-V", d: "Hadoop" }, answer: "a" },
+
+    { question: "Which service monitors ECS and BMS performance in real-time?", choices: { a: "IMS", b: "Cloud Eye", c: "NAT Gateway", d: "VPN" }, answer: "b" },
+
+    { question: "A Virtual Private Cloud (VPC) is best described as:", choices: { a: "A public IP provider", b: "A logically isolated virtual network", c: "A dedicated physical switch", d: "A database cluster" }, answer: "b" },
+
+    { question: "By default, VPCs:", choices: { a: "Communicate with all other VPCs", b: "Cannot communicate with each other", c: "Have built-in DNS resolution", d: "Share the same routing tables" }, answer: "b" },
+
+    { question: "Which protocol is NOT used in VPN tunnels?", choices: { a: "PPTP", b: "L2TP", c: "IPsec", d: "SMTP" }, answer: "d" },
+
+    { question: "Elastic Load Balance (ELB) eliminates:", choices: { a: "VPCs", b: "Single points of failure (SPOFs)", c: "Auto Scaling groups", d: "Storage needs" }, answer: "b" },
+
+    { question: "Which ECS disk type is designed for cost-effectiveness in large storage scenarios?", choices: { a: "SSD", b: "High I/O EVS", c: "Local HDDs in disk-intensive ECS", d: "GPU memory" }, answer: "c" },
+
+    { question: "Which is a public image in IMS?", choices: { a: "An image created by a user for their own ECS", b: "A standard image provided by the cloud platform", c: "A shared image from another tenant", d: "A marketplace third-party image" }, answer: "b" },
+
+    { question: "NAT Gateway provides:", choices: { a: "Domain registration", b: "Network Address Translation (SNAT and DNAT)", c: "Cloud backup", d: "GPU acceleration" }, answer: "b" },
+
+    { question: "Which ECS is suited for memory-intensive tasks like big data analysis?", choices: { a: "GPU-accelerated ECS", b: "Memory-optimized ECS", c: "Disk-intensive ECS", d: "General-purpose ECS" }, answer: "b" },
+
+    { question: "What provides multi-dimensional protection against vulnerabilities in ECS?", choices: { a: "Auto Scaling", b: "Security services like WAF & vulnerability scanning", c: "Direct Connect", d: "IMS" }, answer: "b" },
+
+    { question: "A VPC peering connection allows:", choices: { a: "Two VPCs in the same region to communicate privately", b: "ECSs to connect directly to the Internet", c: "DNS to automatically resolve domains", d: "ELB to distribute across regions" }, answer: "a" },
+
+    { question: "Which service is serverless and runs uploaded code automatically?", choices: { a: "IMS", b: "FunctionGraph", c: "Cloud Eye", d: "NAT Gateway" }, answer: "b" },
+
+    { question: "The Elastic IP (EIP) service provides:", choices: { a: "Dynamic DNS records", b: "Static public IP addresses with scalable bandwidth", c: "Physical server addresses", d: "Private IP groups" }, answer: "b" },
+
+    { question: "What is the main advantage of DNS intelligent resolution?", choices: { a: "Reduces ECS memory usage", b: "Returns optimized IP addresses based on visitor’s network", c: "Replaces NAT gateway", d: "Encrypts VPN traffic" }, answer: "b" },
+
+    { question: "Which ECS scenario benefits most from high PPS and low latency?", choices: { a: "Office documentation", b: "Distributed Hadoop computing", c: "Web hosting with DNS", d: "Email sending" }, answer: "b" },
+
+    { question: "The root domain in DNS hierarchy is represented by:", choices: { a: ".com", b: ".", c: "example.com", d: "org" }, answer: "b" },
+
+    { question: "A Dedicated Host (DeH) ensures performance by:", choices: { a: "Sharing resources with multiple tenants", b: "Keeping compute resources isolated", c: "Using VPN connections", d: "Offloading DNS queries" }, answer: "b" },
+
+    { question: "Which ECS type is best for scientific computing and AI training?", choices: { a: "GPU-accelerated ECS (P series)", b: "Disk-intensive ECS", c: "Memory-optimized ECS", d: "Bare Metal Server" }, answer: "a" },
+
+    { question: "Which NAT type allows VPC servers to access the Internet via one EIP?", choices: { a: "DNAT", b: "SNAT", c: "ENAT", d: "PNAT" }, answer: "b" },
+
+    { question: "Which network option gives a low-latency, dedicated line between on-premises data centers and the cloud?", choices: { a: "DNS", b: "VPN", c: "Direct Connect", d: "Cloud Eye" }, answer: "c" },
+
+    { question: "In Auto Scaling, the “cooldown period” prevents:", choices: { a: "Overloading NAT gateways", b: "Alarm-triggered scaling from repeating too quickly", c: "DNS from resolving domains", d: "VPN tunnels from dropping" }, answer: "b" },
+
+    { question: "Which service distributes network traffic intelligently across servers?", choices: { a: "VPC", b: "IMS", c: "ELB", d: "Cloud Backup" }, answer: "c" },
+
+    { question: "The marketplace image in IMS is:", choices: { a: "Provided by Huawei engineers only", b: "A third-party preconfigured image", c: "A private user-created image", d: "A temporary testing image" }, answer: "b" },
+
+    { question: "Which ECS has no virtualization overhead?", choices: { a: "Disk-intensive ECS", b: "Bare Metal Server", c: "GPU-accelerated ECS", d: "Auto Scaling ECS" }, answer: "b" },
+
+    { question: "A virtual IP address in VPCs is mainly used for:", choices: { a: "Email server verification", b: "High availability with active/standby ECS switchover", c: "DNS resolution of domain names", d: "NAT translation" }, answer: "b" },
+
+    { question: "The main goal of ELB health checks is to:", choices: { a: "Increase storage space", b: "Ensure traffic goes only to healthy servers", c: "Replace NAT functionality", d: "Encrypt VPN data" }, answer: "b" },
+
+    { question: "Which Huawei service allows building globally connected VPCs?", choices: { a: "Cloud Connect", b: "VPN", c: "DNS", d: "NAT Gateway" }, answer: "a" },
+
+    { question: "Which Auto Scaling policy triggers actions based on metrics like CPU usage?", choices: { a: "Periodic policy", b: "Scheduled policy", c: "Alarm-based policy", d: "Random policy" }, answer: "c" },
+
+    { question: "Reverse DNS resolution is mainly used for:", choices: { a: "Filtering spam emails by validating sender servers", b: "Translating private IPs into NAT addresses", c: "Scaling ECS resources", d: "Checking VPN tunnels" }, answer: "a" }
+  ];
+
+  const questionContainer = document.getElementById("questionContainer");
+  const bubbleCol1 = document.getElementById("bubbleCol1");
+  const bubbleCol2 = document.getElementById("bubbleCol2");
+  const correctAnswers = {};
+  const totalQuestions = questions.length;
+
+  questions.forEach((q, i) => {
+    const num = i + 1;
+    correctAnswers[num] = q.answer;
+
+    const qDiv = document.createElement("div");
+    qDiv.className = "question";
+    qDiv.innerHTML = `
+      <strong>${num}. ${q.question}</strong><br>
+      <label><input type="radio" name="q${num}" value="a" onclick="markBubble(${num}, 'a')"> ${q.choices.a}</label>
+      <label><input type="radio" name="q${num}" value="b" onclick="markBubble(${num}, 'b')"> ${q.choices.b}</label>
+      <label><input type="radio" name="q${num}" value="c" onclick="markBubble(${num}, 'c')"> ${q.choices.c}</label>
+      <label><input type="radio" name="q${num}" value="d" onclick="markBubble(${num}, 'd')"> ${q.choices.d}</label>
+    `;
+    questionContainer.appendChild(qDiv);
+
+    const bubbleRow = document.createElement("div");
+    bubbleRow.className = "bubble";
+    bubbleRow.innerHTML = `
+      ${num}.
+      <span id="b${num}a"></span>
+      <span id="b${num}b"></span>
+      <span id="b${num}c"></span>
+      <span id="b${num}d"></span>
+    `;
+    (num <= 15 ? bubbleCol1 : bubbleCol2).appendChild(bubbleRow);
+  });
+
+  function markBubble(qNum, choice) {
+    ['a', 'b', 'c', 'd'].forEach(letter => {
+      const el = document.getElementById(`b${qNum}${letter}`);
+      el.classList.remove('filled');
+    });
+    const selected = document.getElementById(`b${qNum}${choice}`);
+    if (selected) selected.classList.add('filled');
+  }
+
+  // Timer Logic
+  const totalTime = 35 * 60; // 30 minutes in seconds
+  let timeLeft = totalTime;
+  const timerText = document.getElementById("timerText");
+  const progressCircle = document.getElementById("progressCircle");
+  const radius = 45;
+  const circumference = 2 * Math.PI * radius;
+  progressCircle.style.strokeDasharray = circumference;
+
+  function updateTimer() {
+    const minutes = Math.floor(timeLeft / 60);
+    const seconds = timeLeft % 60;
+    timerText.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+    const offset = circumference - (timeLeft / totalTime) * circumference;
+    progressCircle.style.strokeDashoffset = offset;
+  }
+
+  const timerInterval = setInterval(() => {
+    updateTimer();
+    if (timeLeft <= 0) {
+      clearInterval(timerInterval);
+      alert("Time is up! Submitting your quiz.");
+      document.getElementById("submitBtn").click();
+      document.getElementById("submitBtn").disabled = true;
+    }
+    timeLeft--;
+  }, 1000);
+
+  // Submit logic
+  document.getElementById("submitBtn").addEventListener("click", () => {
+    const name = document.getElementById("name").value.trim();
+    const section = document.getElementById("section").value.trim();
+    const subject = document.getElementById("subject").value.trim();
+
+    const music = document.getElementById("bg-music");
+    if (music.paused) {
+      music.play().catch(err => {
+        console.warn("Autoplay was blocked:", err);
+      });
+    }
+
+    if (!name || !section || !subject) {
+      alert("Please fill in Name, Section, and Subject.");
+      return;
+    }
+
+    let correct = 0, wrong = 0, unanswered = 0, feedback = "";
+
+    for (let i = 1; i <= totalQuestions; i++) {
+      const selected = document.querySelector(`input[name="q${i}"]:checked`);
+      if (selected) {
+        if (selected.value === correctAnswers[i]) {
+          correct++;
+        } else {
+          wrong++;
+          feedback += `❌ Q${i} (Your answer: ${selected.value}, Correct: ${correctAnswers[i]})<br>`;
+        }
+      } else {
+        unanswered++;
+        feedback += `⚠️ Q${i} was not answered (Correct: ${correctAnswers[i]})<br>`;
+      }
+    }
+
+    const summary = `
+      <p><strong>Name:</strong> ${name}</p>
+      <p><strong>Section:</strong> ${section}</p>
+      <p><strong>Subject:</strong> ${subject}</p>
+      <p><strong>Score:</strong> ${correct}/${totalQuestions}</p>
+      <p><strong>Correct:</strong> ${correct}</p>
+      <p><strong>Wrong:</strong> ${wrong}</p>
+      <p><strong>Unanswered:</strong> ${unanswered}</p>
+      <hr>
+      <div>${feedback}</div>
+    `;
+
+    document.getElementById("scoreSummary").innerHTML = summary;
+  });
+
+  updateTimer(); // Initialize timer immediately
+</script>
+
+</body>
+</html>
