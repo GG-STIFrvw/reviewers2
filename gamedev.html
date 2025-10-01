@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Quiz App</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      display: flex;
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+    .left {
+      width: 60%;
+      height: 100vh;
+      overflow-y: scroll;
+      padding: 20px;
+      border-right: 1px solid #ccc;
+    }
+    .right {
+      width: 40%;
+      padding: 20px;
+      position: relative;
+    }
+    .question {
+      margin-bottom: 20px;
+    }
+    .question label {
+      margin-right: 10px;
+    }
+    .bubble {
+      display: flex;
+      align-items: center;
+      margin-bottom: 5px;
+    }
+    .bubble span {
+      display: inline-block;
+      width: 14px;
+      height: 14px;
+      border: 1px solid black;
+      border-radius: 50%;
+      margin: 0 3px;
+    }
+    .filled {
+      background-color: black;
+    }
+    #bubbleWrapper {
+    display: flex;
+  justify-content: center;  /* center the columns horizontally */
+  gap: 30px;
+  margin: 20px 0;
+}
+
+    input[type="text"] {
+      width: 100%;
+      margin-bottom: 10px;
+      padding: 5px;
+    }
+    #submitBtn {
+      display: block;
+      margin: 20px auto; /* auto margins center it horizontally */
+      padding: 10px 20px;
+      background-color: green;
+      color: white;
+      font-size: 16px;
+      border: none;
+      cursor: pointer;
+    }
+    #scoreSummary {
+      margin-top: 20px;
+      font-weight: bold;
+    }
+    /* Timer Styles */
+    #timerContainer {
+      width: 120px;
+      height: 120px;
+      margin: 0 auto 20px;
+      position: relative;
+    }
+    #timerCircle {
+      width: 100%;
+      height: 100%;
+      transform: rotate(-90deg);
+    }
+    #timerCircle circle {
+      fill: none;
+      stroke-width: 10;
+    }
+    #bgCircle {
+      stroke: #eee;
+    }
+    #progressCircle {
+      stroke: red;
+      stroke-linecap: round;
+      transition: stroke-dashoffset 1s linear;
+    }
+    #timerText {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-weight: bold;
+      font-size: 18px;
+      color: red;
+    }
+    #bubbleCol1, #bubbleCol2 {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+  </style>
+</head>
+<body>
+
+<!-- Background Music -->
+<audio id="bg-music" loop>
+  <source src="congrats.mp3" type="audio/mpeg">
+  Your browser does not support the audio element.
+</audio>
+
+<!-- Left Panel -->
+<div class="left" id="questionContainer">
+    <h1>MIS Finals Reviewer</h1>
+    <h3>Type in your name, section and subject to view summary after submitting</h3>
+</div>
+
+<!-- Right Panel -->
+<div class="right">
+  <div id="timerContainer">
+    <svg id="timerCircle" viewBox="0 0 100 100">
+      <circle id="bgCircle" cx="50" cy="50" r="45"></circle>
+      <circle id="progressCircle" cx="50" cy="50" r="45" stroke-dasharray="282.6" stroke-dashoffset="0"></circle>
+    </svg>
+    <div id="timerText">30:00</div>
+  </div>
+
+  <input type="text" id="name" placeholder="NAME">
+  <input type="text" id="section" placeholder="SECTION">
+  <input type="text" id="subject" placeholder="SUBJECT">
+
+  <div id="bubbleWrapper">
+    <div id="bubbleCol1"></div>
+    <div id="bubbleCol2"></div>
+  </div>
+
+  <button id="submitBtn">SUBMIT</button>
+  <div id="scoreSummary"></div>
+</div>
+
+<script>
+  const questions = [
+    {
+      question: "Which of the following is NOT a property of vectors?",
+      choices: { a: "Magnitude", b: "Direction", c: "Fixed location in space", d: "Can be added" },
+      answer: "c"
+    },
+    {
+      question: "The vector 〈−3, 4〉 has magnitude:",
+      choices: { a: "5", b: "√7", c: "7", d: "√25" },
+      answer: "a"
+    },
+    {
+      question: "If v = 〈2, −1〉 and w = 〈3, 5〉, then v + w =",
+      choices: { a: "〈5, 4〉", b: "〈1, 6〉", c: "〈5, −6〉", d: "〈−1, 4〉" },
+      answer: "a"
+    },
+    {
+      question: "If v = 〈5, 2〉 and w = 〈1, 4〉, then v − w =",
+      choices: { a: "〈6, −2〉", b: "〈4, −2〉", c: "〈−4, 2〉", d: "〈5, 6〉" },
+      answer: "b"
+    },
+    {
+      question: "A vector whose magnitude is 1 is called:?",
+      choices: { a: "Null vector", b: "Unit vector", c: "Standard vector", d: "Transpose vector" },
+      answer: "b"
+    },
+    {
+      question: "Which of the following best describes a matrix?",
+      choices: { a: "A number with magnitude only", b: "A displacement in space", c: "A rectangular array of numbers", d: "A single ordered pair" },
+      answer: "c"
+    },
+    {
+      question: "The identity matrix is special because:",
+      choices: { a: "It adds nothing to a matrix", b: "It multiplies to give the same matrix back", c: "It turns a matrix into zero", d: "It transposes a matrix" },
+      answer: "b"
+    },
+    {
+      question: "The transpose of a 2x3 matrix has dimensions",
+      choices: { a: "2x3", b: "3x2", c: "3x3", d: "2x2" },
+      answer: "b"
+    },
+    {
+      question: "Which operation is NOT valid for matrices of different dimensions?",
+      choices: { a: "Addition", b: "Subtraction", c: "Scalar multiplication", d: "Transposition" },
+      answer: "a", "b"
+    },
+    {
+      question: "Which of the following is true about matrix multiplication?",
+      choices: { a: "Always commutative", b: "Possible if columns of A = rows of B", c: "Possible only for square matrices", d: "Possible only for identity matrices" },
+      answer: "b"
+    },
+    {
+      question: "What is the result of multiplying [1 0; 0 1] × [2 3; 4 5]?",
+      choices: { a: "[2 3; 4 5]", b: "[1 3; 4 1]", c: "[2 7; 0 5]", d: "[3 5; 2 4]" },
+      answer: "a"
+    },
+    {
+      question: "The diagonal elements of the identity matrix are always:",
+      choices: { a: "0", b: "1", c: "-1", d: "varies" },
+      answer: "b"
+    },
+    {
+      question: "Which transformation moves an object’s coordinates without changing its orientation?",
+      choices: { a: "Scaling", b: "Translation", c: "Rotation", d: "Projection" },
+      answer: "b"
+    },
+    {
+      question: "A translation matrix adds which values to the coordinates?",
+      choices: { a: "Scale factors", b: "Rotation angles", c: "Translation vectors (Tx, Ty, Tz)", d: "Zeroes" },
+      answer: "c"
+    },
+    {
+      question: "If point (1, 1, 1) is translated by (Tx=2, Ty=3, Tz=1), the result is:",
+      choices: { a: "(3, 4, 2)", b: "(2, 2, 2)", c: "(1, 4, 1)", d: "(2, 3, 2)" },
+      answer: "a"
+    },
+    {
+      question: "Scaling with Sx=2, Sy=2, Sz=2 is called:",
+      choices: { a: "Uniform scaling", b: "Non-uniform scaling", c: "Identity scaling", d: "Projection scaling" },
+      answer: "a"
+    },
+    {
+      question: "Scaling with factors less than 1 results in:",
+      choices: { a: "Enlargement", b: "Reduction", c: "Rotation", d: "Translation" },
+      answer: "b"
+    },
+    {
+      question: "Rotating a 3D object about the y-axis mixes which coordinates?",
+      choices: { a: "x and z", b: "x and y", c: "y and z", d: "Only x" },
+      answer: "a"
+    },
+    {
+      question: "Rotating about the z-axis leaves which coordinate unchanged?",
+      choices: { a: "x", b: "y", c: "z", d: "all are changed" },
+      answer: "c"
+    },
+    {
+      question: "A 90° rotation of point (2, 0, 0) around the z-axis results in:",
+      choices: { a: "(0, 2, 0)", b: "(−2, 0, 0)", c: "(0, −2, 0)", d: "(2, 0, 0)" },
+      answer: "a"
+    },
+    {
+      question: "The shape of the perspective viewing volume is a",
+      choices: { a: "Cone", b: "Sphere", c: "Frustum", d: "Cube" },
+      answer: "c"
+    },
+    {
+      question: "The near plane of a frustum is always located:",
+      choices: { a: "Closer to the origin", b: "Farther from the origin", c: "At infinity", d: "Behind the origin" },
+      answer: "a"
+    },
+    {
+      question: "Objects farther from the camera in a perspective projection:",
+      choices: { a: "Appear larger", b: "Appear smaller", c: "Stay the same size", d: "Disappear completely" },
+      answer: "b"
+    },
+    {
+      question: "The angle of view determines",
+      choices: { a: "How wide the visible region is", b: "The scaling factor", c: "The rotation angle", d: "The translation shift" },
+      answer: "a"
+    },
+    {
+      question: "If the aspect ratio is 16:9, this means:",
+      choices: { a: "Height ÷ Width = 16/9", b: "Width ÷ Height = 16/9", c: "Near ÷ Far = 16/9", d: "Far ÷ Near = 16/9" },
+      answer: "b"
+    },
+    {
+      question: "Points outside the near and far distances of a frustum are:",
+      choices: { a: "Rendered larger", b: "Rendered smaller", c: "Not rendered", d: "Translated" },
+      answer: "c"
+    },
+    {
+      question: "Projection maps 3D objects to:",
+      choices: { a: "A 2D projection window", b: "Another 3D object", c: "A frustum cube", d: "Identity coordinates" },
+      answer: "a"
+    },
+    {
+      question: "Which transformation is most important for camera motion in 3D graphics?",
+      choices: { a: "Translation", b: "Rotation", c: "Projection", d: "All of the above" },
+      answer: "d"
+    },
+    {
+      question: "Which transformation is described as changing position only”?",
+      choices: { a: "Translation", b: "Rotation", c: "Scaling", d: "Projection" },
+      answer: "a"
+    },
+    {
+      question: "Which transformation is described as changing size only?",
+      choices: { a: "Translation", b: "Rotation", c: "Scaling", d: "Projection" },
+      answer: "c"
+    },
+    {
+      question: "Which transformation is described as changing orientation only?",
+      choices: { a: "Translation", b: "Rotation", c: "Scaling", d: "Projection" },
+      answer: "b"
+    },
+    {
+      question: "The matrix used for rotation around the x-axis contains:?",
+      choices: { a: "sinθ and cosθ in y and z entries", b: "sinθ and cosθ in x and y entries", c: "sinθ and cosθ in x and z entries", d: "No trigonometric functions" },
+      answer: "a"
+    },
+    {
+      question: "The translation of point (0,0,0) by (1,1,1) results in:?",
+      choices: { a: "(1,1,1)", b: "(0,0,0)", c: "(−1,−1,−1)", d: "(2,2,2)" },
+      answer: "a"
+    },
+    {
+      question: "A projection window corresponds to:”?",
+      choices: { a: "The far plane", b: "The near plane", c: "The midpoint of the frustum", d: "The entire cube" },
+      answer: "b"
+    },
+     {
+      question: "Which transformation corresponds to compressing the frustum into a cube?",
+      choices: { a: "Translation", b: "Projection", c: "Scaling", d: "Rotation" },
+      answer: "d"
+    }
+  ];
+
+  const questionContainer = document.getElementById("questionContainer");
+  const bubbleCol1 = document.getElementById("bubbleCol1");
+  const bubbleCol2 = document.getElementById("bubbleCol2");
+  const correctAnswers = {};
+  const totalQuestions = questions.length;
+
+  questions.forEach((q, i) => {
+    const num = i + 1;
+    correctAnswers[num] = q.answer;
+
+    const qDiv = document.createElement("div");
+    qDiv.className = "question";
+    qDiv.innerHTML = `
+      <strong>${num}. ${q.question}</strong><br>
+      <label><input type="radio" name="q${num}" value="a" onclick="markBubble(${num}, 'a')"> ${q.choices.a}</label>
+      <label><input type="radio" name="q${num}" value="b" onclick="markBubble(${num}, 'b')"> ${q.choices.b}</label>
+      <label><input type="radio" name="q${num}" value="c" onclick="markBubble(${num}, 'c')"> ${q.choices.c}</label>
+      <label><input type="radio" name="q${num}" value="d" onclick="markBubble(${num}, 'd')"> ${q.choices.d}</label>
+    `;
+    questionContainer.appendChild(qDiv);
+
+    const bubbleRow = document.createElement("div");
+    bubbleRow.className = "bubble";
+    bubbleRow.innerHTML = `
+      ${num}.
+      <span id="b${num}a"></span>
+      <span id="b${num}b"></span>
+      <span id="b${num}c"></span>
+      <span id="b${num}d"></span>
+    `;
+    (num <= 15 ? bubbleCol1 : bubbleCol2).appendChild(bubbleRow);
+  });
+
+  function markBubble(qNum, choice) {
+    ['a', 'b', 'c', 'd'].forEach(letter => {
+      const el = document.getElementById(`b${qNum}${letter}`);
+      el.classList.remove('filled');
+    });
+    const selected = document.getElementById(`b${qNum}${choice}`);
+    if (selected) selected.classList.add('filled');
+  }
+
+  // Timer Logic
+  const totalTime = 10 * 60; // 30 minutes in seconds
+  let timeLeft = totalTime;
+  const timerText = document.getElementById("timerText");
+  const progressCircle = document.getElementById("progressCircle");
+  const radius = 45;
+  const circumference = 2 * Math.PI * radius;
+  progressCircle.style.strokeDasharray = circumference;
+
+  function updateTimer() {
+    const minutes = Math.floor(timeLeft / 60);
+    const seconds = timeLeft % 60;
+    timerText.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+    const offset = circumference - (timeLeft / totalTime) * circumference;
+    progressCircle.style.strokeDashoffset = offset;
+  }
+
+  const timerInterval = setInterval(() => {
+    updateTimer();
+    if (timeLeft <= 0) {
+      clearInterval(timerInterval);
+      alert("Time is up! Submitting your quiz.");
+      document.getElementById("submitBtn").click();
+      document.getElementById("submitBtn").disabled = true;
+    }
+    timeLeft--;
+  }, 1000);
+
+  // Submit logic
+  document.getElementById("submitBtn").addEventListener("click", () => {
+    const name = document.getElementById("name").value.trim();
+    const section = document.getElementById("section").value.trim();
+    const subject = document.getElementById("subject").value.trim();
+
+    const music = document.getElementById("bg-music");
+    if (music.paused) {
+      music.play().catch(err => {
+        console.warn("Autoplay was blocked:", err);
+      });
+    }
+
+    if (!name || !section || !subject) {
+      alert("Please fill in Name, Section, and Subject.");
+      return;
+    }
+
+    let correct = 0, wrong = 0, unanswered = 0, feedback = "";
+
+    for (let i = 1; i <= totalQuestions; i++) {
+      const selected = document.querySelector(`input[name="q${i}"]:checked`);
+      if (selected) {
+        if (selected.value === correctAnswers[i]) {
+          correct++;
+        } else {
+          wrong++;
+          feedback += `❌ Q${i} (Your answer: ${selected.value}, Correct: ${correctAnswers[i]})<br>`;
+        }
+      } else {
+        unanswered++;
+        feedback += `⚠️ Q${i} was not answered (Correct: ${correctAnswers[i]})<br>`;
+      }
+    }
+
+    const summary = `
+      <p><strong>Name:</strong> ${name}</p>
+      <p><strong>Section:</strong> ${section}</p>
+      <p><strong>Subject:</strong> ${subject}</p>
+      <p><strong>Score:</strong> ${correct}/${totalQuestions}</p>
+      <p><strong>Correct:</strong> ${correct}</p>
+      <p><strong>Wrong:</strong> ${wrong}</p>
+      <p><strong>Unanswered:</strong> ${unanswered}</p>
+      <hr>
+      <div>${feedback}</div>
+    `;
+
+    document.getElementById("scoreSummary").innerHTML = summary;
+  });
+
+  updateTimer(); // Initialize timer immediately
+</script>
+
+</body>
+</html>
