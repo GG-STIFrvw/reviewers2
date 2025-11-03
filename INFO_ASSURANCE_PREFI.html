@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Quiz App</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      display: flex;
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+    .left {
+      width: 60%;
+      height: 100vh;
+      overflow-y: scroll;
+      padding: 20px;
+      border-right: 1px solid #ccc;
+    }
+    .right {
+      width: 40%;
+      padding: 20px;
+      position: relative;
+    }
+    .question {
+      margin-bottom: 20px;
+    }
+    .question label {
+      margin-right: 10px;
+    }
+    .bubble {
+      display: flex;
+      align-items: center;
+      margin-bottom: 5px;
+    }
+    .bubble span {
+      display: inline-block;
+      width: 14px;
+      height: 14px;
+      border: 1px solid black;
+      border-radius: 50%;
+      margin: 0 3px;
+    }
+    .filled {
+      background-color: black;
+    }
+    #bubbleWrapper {
+    display: flex;
+  justify-content: center;  /* center the columns horizontally */
+  gap: 30px;
+  margin: 20px 0;
+}
+
+    input[type="text"] {
+      width: 100%;
+      margin-bottom: 10px;
+      padding: 5px;
+    }
+    #submitBtn {
+      display: block;
+      margin: 20px auto; /* auto margins center it horizontally */
+      padding: 10px 20px;
+      background-color: green;
+      color: white;
+      font-size: 16px;
+      border: none;
+      cursor: pointer;
+    }
+    #scoreSummary {
+      margin-top: 20px;
+      font-weight: bold;
+    }
+    /* Timer Styles */
+    #timerContainer {
+      width: 120px;
+      height: 120px;
+      margin: 0 auto 20px;
+      position: relative;
+    }
+    #timerCircle {
+      width: 100%;
+      height: 100%;
+      transform: rotate(-90deg);
+    }
+    #timerCircle circle {
+      fill: none;
+      stroke-width: 10;
+    }
+    #bgCircle {
+      stroke: #eee;
+    }
+    #progressCircle {
+      stroke: red;
+      stroke-linecap: round;
+      transition: stroke-dashoffset 1s linear;
+    }
+    #timerText {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-weight: bold;
+      font-size: 18px;
+      color: red;
+    }
+    #bubbleCol1, #bubbleCol2 {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+  </style>
+</head>
+<body>
+
+<!-- Background Music -->
+<audio id="bg-music" loop>
+  <source src="congrats.mp3" type="audio/mpeg">
+  Your browser does not support the audio element.
+</audio>
+
+<!-- Left Panel -->
+<div class="left" id="questionContainer">
+    <h1>Info Assurance Prefi 4YS1 Reviewer</h1>
+    <h3>Type in your name, section and subject to view summary after submitting</h3>
+</div>
+
+<!-- Right Panel -->
+<div class="right">
+  <div id="timerContainer">
+    <svg id="timerCircle" viewBox="0 0 100 100">
+      <circle id="bgCircle" cx="50" cy="50" r="45"></circle>
+      <circle id="progressCircle" cx="50" cy="50" r="45" stroke-dasharray="282.6" stroke-dashoffset="0"></circle>
+    </svg>
+    <div id="timerText">30:00</div>
+  </div>
+
+  <input type="text" id="name" placeholder="NAME">
+  <input type="text" id="section" placeholder="SECTION">
+  <input type="text" id="subject" placeholder="SUBJECT">
+
+  <div id="bubbleWrapper">
+    <div id="bubbleCol1"></div>
+    <div id="bubbleCol2"></div>
+  </div>
+
+  <button id="submitBtn">SUBMIT</button>
+  <div id="scoreSummary"></div>
+</div>
+
+<script>
+  const questions = [
+  {
+    question: "What is the main objective of risk assessment in an organization?",
+    choices: {
+      a: "To develop new information systems",
+      b: "To enable executives to determine an appropriate budget for security and implement optimal security controls",
+      c: "To identify all employees handling personal information",
+      d: "To monitor external network traffic"
+    },
+    answer: "b"
+  },
+  {
+    question: "Which term refers to an item of value that supports the achievement of organizational objectives?",
+    choices: {
+      a: "Threat",
+      b: "Vulnerability",
+      c: "Asset",
+      d: "Control"
+    },
+    answer: "c"
+  },
+  {
+    question: "What is a threat in the context of information security?",
+    choices: {
+      a: "A weakness in a system",
+      b: "An event or circumstance that can adversely impact organizational operations or assets",
+      c: "A security policy for handling personal data",
+      d: "A safeguard against cyberattacks"
+    },
+    answer: "b"
+  },
+  {
+    question: "What describes the magnitude of the potential of a threat event to impose a cost on an organization?",
+    choices: {
+      a: "Threat strength",
+      b: "Threat severity",
+      c: "Impact",
+      d: "Risk"
+    },
+    answer: "b"
+  },
+  {
+    question: "The probable level of force that a threat agent can apply against an asset is called:",
+    choices: {
+      a: "Threat event frequency",
+      b: "Threat severity",
+      c: "Threat strength",
+      d: "Vulnerability"
+    },
+    answer: "c"
+  },
+  {
+    question: "Which term refers to the probable frequency within a time frame that a threat agent will act against an asset?",
+    choices: {
+      a: "Impact",
+      b: "Likelihood",
+      c: "Threat event frequency",
+      d: "Level of risk"
+    },
+    answer: "c"
+  },
+  {
+    question: "A weakness in a system that could be exploited by a threat source is known as:",
+    choices: {
+      a: "Vulnerability",
+      b: "Risk",
+      c: "Threat",
+      d: "Security control"
+    },
+    answer: "a"
+  },
+  {
+    question: "What is defined as a safeguard or countermeasure designed to protect the confidentiality, integrity, and availability of information?",
+    choices: {
+      a: "Asset",
+      b: "Vulnerability",
+      c: "Security control",
+      d: "Threat"
+    },
+    answer: "c"
+  },
+  {
+    question: "Which term refers to the magnitude of harm that can result from the unauthorized disclosure or loss of information?",
+    choices: {
+      a: "Impact",
+      b: "Likelihood",
+      c: "Risk",
+      d: "Threat strength"
+    },
+    answer: "a"
+  },
+  {
+    question: "What is the probable frequency that a threat agent will inflict harm upon an asset?",
+    choices: {
+      a: "Risk",
+      b: "Impact",
+      c: "Likelihood",
+      d: "Level of risk"
+    },
+    answer: "c"
+  },
+  {
+    question: "What is a measure of the extent to which an entity is threatened by a potential circumstance or event?",
+    choices: {
+      a: "Impact",
+      b: "Risk",
+      c: "Threat",
+      d: "Vulnerability"
+    },
+    answer: "b"
+  },
+  {
+    question: "Privacy impact assessment (PIA) is primarily used to:",
+    choices: {
+      a: "Test the organization’s firewall",
+      b: "Analyze how information is handled to ensure privacy compliance",
+      c: "Estimate physical security requirements",
+      d: "Train employees about cybersecurity awareness"
+    },
+    answer: "b"
+  },
+  {
+    question: "Which of the following is NOT one of the two factors used to estimate privacy impact?",
+    choices: {
+      a: "Prejudicial potential",
+      b: "Level of identification",
+      c: "Threat strength",
+      d: "Both a and b"
+    },
+    answer: "c"
+  },
+  {
+    question: "What is prejudicial potential?",
+    choices: {
+      a: "A measure of how easily data subjects can be identified",
+      b: "An estimation of how much damage would be caused by the consequences of a threat",
+      c: "A safeguard to protect confidential data",
+      d: "A method for assessing risk level"
+    },
+    answer: "b"
+  },
+  {
+    question: "Which factor estimates how easily it is to identify data subjects using available data and software?",
+    choices: {
+      a: "Level of identification",
+      b: "Prejudicial potential",
+      c: "Threat severity",
+      d: "Likelihood"
+    },
+    answer: "a"
+  },
+  {
+    question: "What is the goal of a privacy awareness, training, and education program?",
+    choices: {
+      a: "To replace IT security measures",
+      b: "To ensure all employees understand and uphold information privacy responsibilities",
+      c: "To enforce stricter social media use",
+      d: "To limit IT system usage"
+    },
+    answer: "b"
+  },
+  {
+    question: "What term describes how well staff understand the importance of protecting personal information?",
+    choices: {
+      a: "Privacy culture",
+      b: "Privacy awareness",
+      c: "Cybersecurity essentials",
+      d: "Risk management"
+    },
+    answer: "b"
+  },
+  {
+    question: "What term describes how well staff demonstrate expected privacy behavior according to their responsibilities?",
+    choices: {
+      a: "Privacy awareness",
+      b: "Privacy culture",
+      c: "Cybersecurity essentials",
+      d: "Education and certification"
+    },
+    answer: "b"
+  },
+  {
+    question: "In the cybersecurity learning continuum, which level explains and promotes security to the workforce?",
+    choices: {
+      a: "Awareness",
+      b: "Cybersecurity essentials",
+      c: "Role-based training",
+      d: "Education/certification"
+    },
+    answer: "a"
+  },
+  {
+    question: "Which training level provides secure practices for employees involved in IT systems?",
+    choices: {
+      a: "Awareness",
+      b: "Cybersecurity essentials",
+      c: "Role-based training",
+      d: "Education/certification"
+    },
+    answer: "b"
+  },
+  {
+    question: "Role-based training aims to:",
+    choices: {
+      a: "Train only executives on cybersecurity risks",
+      b: "Provide knowledge specific to an individual's role in information systems",
+      c: "Teach general privacy laws",
+      d: "Develop hardware installation skills"
+    },
+    answer: "b"
+  },
+  {
+    question: "Education/certification in cybersecurity integrates:",
+    choices: {
+      a: "Only theoretical privacy concepts",
+      b: "Practical training for a single department",
+      c: "All security skills into a common body of knowledge",
+      d: "Social engineering simulations"
+    },
+    answer: "c"
+  },
+  {
+    question: "Which of the following statements about privacy awareness training is TRUE?",
+    choices: {
+      a: "It is optional for employees without IT access",
+      b: "It must reach all employees, including those without IT access",
+      c: "It only covers digital security topics",
+      d: "It replaces cybersecurity essentials training"
+    },
+    answer: "b"
+  }
+];
+
+  const questionContainer = document.getElementById("questionContainer");
+  const bubbleCol1 = document.getElementById("bubbleCol1");
+  const bubbleCol2 = document.getElementById("bubbleCol2");
+  const correctAnswers = {};
+  const totalQuestions = questions.length;
+
+  questions.forEach((q, i) => {
+    const num = i + 1;
+    correctAnswers[num] = q.answer;
+
+    const qDiv = document.createElement("div");
+    qDiv.className = "question";
+    qDiv.innerHTML = `
+      <strong>${num}. ${q.question}</strong><br>
+      <label><input type="radio" name="q${num}" value="a" onclick="markBubble(${num}, 'a')"> ${q.choices.a}</label>
+      <label><input type="radio" name="q${num}" value="b" onclick="markBubble(${num}, 'b')"> ${q.choices.b}</label>
+      <label><input type="radio" name="q${num}" value="c" onclick="markBubble(${num}, 'c')"> ${q.choices.c}</label>
+      <label><input type="radio" name="q${num}" value="d" onclick="markBubble(${num}, 'd')"> ${q.choices.d}</label>
+    `;
+    questionContainer.appendChild(qDiv);
+
+    const bubbleRow = document.createElement("div");
+    bubbleRow.className = "bubble";
+    bubbleRow.innerHTML = `
+      ${num}.
+      <span id="b${num}a"></span>
+      <span id="b${num}b"></span>
+      <span id="b${num}c"></span>
+      <span id="b${num}d"></span>
+    `;
+    (num <= 15 ? bubbleCol1 : bubbleCol2).appendChild(bubbleRow);
+  });
+
+  function markBubble(qNum, choice) {
+    ['a', 'b', 'c', 'd'].forEach(letter => {
+      const el = document.getElementById(`b${qNum}${letter}`);
+      el.classList.remove('filled');
+    });
+    const selected = document.getElementById(`b${qNum}${choice}`);
+    if (selected) selected.classList.add('filled');
+  }
+
+  // Timer Logic
+  const totalTime = 10 * 60; // 30 minutes in seconds
+  let timeLeft = totalTime;
+  const timerText = document.getElementById("timerText");
+  const progressCircle = document.getElementById("progressCircle");
+  const radius = 45;
+  const circumference = 2 * Math.PI * radius;
+  progressCircle.style.strokeDasharray = circumference;
+
+  function updateTimer() {
+    const minutes = Math.floor(timeLeft / 60);
+    const seconds = timeLeft % 60;
+    timerText.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+    const offset = circumference - (timeLeft / totalTime) * circumference;
+    progressCircle.style.strokeDashoffset = offset;
+  }
+
+  const timerInterval = setInterval(() => {
+    updateTimer();
+    if (timeLeft <= 0) {
+      clearInterval(timerInterval);
+      alert("Time is up! Submitting your quiz.");
+      document.getElementById("submitBtn").click();
+      document.getElementById("submitBtn").disabled = true;
+    }
+    timeLeft--;
+  }, 1000);
+
+  // Submit logic
+  document.getElementById("submitBtn").addEventListener("click", () => {
+    const name = document.getElementById("name").value.trim();
+    const section = document.getElementById("section").value.trim();
+    const subject = document.getElementById("subject").value.trim();
+
+    const music = document.getElementById("bg-music");
+    if (music.paused) {
+      music.play().catch(err => {
+        console.warn("Autoplay was blocked:", err);
+      });
+    }
+
+    if (!name || !section || !subject) {
+      alert("Please fill in Name, Section, and Subject.");
+      return;
+    }
+
+    let correct = 0, wrong = 0, unanswered = 0, feedback = "";
+
+    for (let i = 1; i <= totalQuestions; i++) {
+      const selected = document.querySelector(`input[name="q${i}"]:checked`);
+      if (selected) {
+        if (selected.value === correctAnswers[i]) {
+          correct++;
+        } else {
+          wrong++;
+          feedback += `❌ Q${i} (Your answer: ${selected.value}, Correct: ${correctAnswers[i]})<br>`;
+        }
+      } else {
+        unanswered++;
+        feedback += `⚠️ Q${i} was not answered (Correct: ${correctAnswers[i]})<br>`;
+      }
+    }
+
+    const summary = `
+      <p><strong>Name:</strong> ${name}</p>
+      <p><strong>Section:</strong> ${section}</p>
+      <p><strong>Subject:</strong> ${subject}</p>
+      <p><strong>Score:</strong> ${correct}/${totalQuestions}</p>
+      <p><strong>Correct:</strong> ${correct}</p>
+      <p><strong>Wrong:</strong> ${wrong}</p>
+      <p><strong>Unanswered:</strong> ${unanswered}</p>
+      <hr>
+      <div>${feedback}</div>
+    `;
+
+    document.getElementById("scoreSummary").innerHTML = summary;
+  });
+
+  updateTimer(); // Initialize timer immediately
+</script>
+
+</body>
+</html>
