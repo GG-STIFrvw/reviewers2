@@ -252,7 +252,58 @@
     question: "Which of the following best defines 'Throughput' in EVS performance metrics?",
     choices: { a: "The time between consecutive read operations", b: "The number of I/O operations per second", c: "The total data transferred per second", d: "The latency measured in milliseconds" },
     answer: "c"
+  },
+      {
+    question: "What determines whether a system disk in EVS is encrypted or not?",
+    choices: { a: "The data source of the disk", b: "The selected image during server creation", c: "The backup schedule", d: "The region where it is deployed" },
+    answer: "b"
+  },
+  {
+    question: "In EVS, what happens when you delete a disk that has snapshots but no backups?",
+    choices: { a: "Snapshots remain stored in OBS", b: "Snapshots are deleted along with the disk", c: "Snapshots are converted to backups", d: "Snapshots are archived automatically" },
+    answer: "b"
+  },
+  {
+    question: "Which service allows you to create backups for EVS disks while servers remain operational?",
+    choices: { a: "Elastic File Service", b: "Cloud Backup and Recovery (CBR)", c: "Object Storage Gateway", d: "Elastic Load Balancer" },
+    answer: "b"
+  },
+  {
+    question: "In the EVS data rebuild process, what triggers the reconstruction of data blocks?",
+    choices: { a: "Disk resizing", b: "Detection of physical server or disk faults", c: "Manual snapshot creation", d: "Metadata updates" },
+    answer: "b"
+  },
+  {
+    question: "Which OBS storage class is optimized for rarely accessed data with lower cost per GB?",
+    choices: { a: "Standard", b: "Infrequent Access", c: "Archive", d: "Coldline" },
+    answer: "b"
+  },
+  {
+    question: "What feature of OBS enables massive scalability with smooth concurrency and low latency?",
+    choices: { a: "Versioning and encryption", b: "Transmission acceleration and intelligent scheduling", c: "Snapshot isolation", d: "Lifecycle management" },
+    answer: "b"
+  },
+  {
+    question: "Which combination of technologies ensures OBS achieves 99.995% service continuity?",
+    choices: { a: "Encryption and data tiering", b: "Cross-region replication and device redundancy", c: "Lifecycle automation and backup recovery", d: "Versioning and auditing" },
+    answer: "b"
+  },
+  {
+    question: "Which of the following OBS application scenarios supports hosting both static and dynamic content with scalability?",
+    choices: { a: "Data analytics", b: "Static website hosting", c: "Enterprise web disks", d: "Backup and archive" },
+    answer: "b"
+  },
+  {
+    question: "Why is Scalable File Service (SFS) ideal for media processing and video-on-demand workflows?",
+    choices: { a: "It supports multiple file system types and high concurrency for HD/4K content", b: "It automatically converts media files to lower resolutions", c: "It provides integrated content delivery acceleration", d: "It encrypts all streaming data by default" },
+    answer: "a"
+  },
+  {
+    question: "What makes SFS Turbo suitable for enterprise file sharing applications?",
+    choices: { a: "It stores data locally on each compute node", b: "It offers physically isolated dedicated resource pools for high performance and compliance", c: "It uses object-level data partitioning for scalability", d: "It is optimized only for small-scale workloads" },
+    answer: "b"
   }
+
 ];
 
 
