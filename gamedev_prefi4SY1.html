@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Quiz App</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      display: flex;
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+    .left {
+      width: 60%;
+      height: 100vh;
+      overflow-y: scroll;
+      padding: 20px;
+      border-right: 1px solid #ccc;
+    }
+    .right {
+      width: 40%;
+      padding: 20px;
+      position: relative;
+    }
+    .question {
+      margin-bottom: 20px;
+    }
+    .question label {
+      margin-right: 10px;
+    }
+    .bubble {
+      display: flex;
+      align-items: center;
+      margin-bottom: 5px;
+    }
+    .bubble span {
+      display: inline-block;
+      width: 14px;
+      height: 14px;
+      border: 1px solid black;
+      border-radius: 50%;
+      margin: 0 3px;
+    }
+    .filled {
+      background-color: black;
+    }
+    #bubbleWrapper {
+    display: flex;
+  justify-content: center;  /* center the columns horizontally */
+  gap: 30px;
+  margin: 20px 0;
+}
+
+    input[type="text"] {
+      width: 100%;
+      margin-bottom: 10px;
+      padding: 5px;
+    }
+    #submitBtn {
+      display: block;
+      margin: 20px auto; /* auto margins center it horizontally */
+      padding: 10px 20px;
+      background-color: green;
+      color: white;
+      font-size: 16px;
+      border: none;
+      cursor: pointer;
+    }
+    #scoreSummary {
+      margin-top: 20px;
+      font-weight: bold;
+    }
+    /* Timer Styles */
+    #timerContainer {
+      width: 120px;
+      height: 120px;
+      margin: 0 auto 20px;
+      position: relative;
+    }
+    #timerCircle {
+      width: 100%;
+      height: 100%;
+      transform: rotate(-90deg);
+    }
+    #timerCircle circle {
+      fill: none;
+      stroke-width: 10;
+    }
+    #bgCircle {
+      stroke: #eee;
+    }
+    #progressCircle {
+      stroke: red;
+      stroke-linecap: round;
+      transition: stroke-dashoffset 1s linear;
+    }
+    #timerText {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-weight: bold;
+      font-size: 18px;
+      color: red;
+    }
+    #bubbleCol1, #bubbleCol2 {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+  </style>
+</head>
+<body>
+
+<!-- Background Music -->
+<audio id="bg-music" loop>
+  <source src="congrats.mp3" type="audio/mpeg">
+  Your browser does not support the audio element.
+</audio>
+
+<!-- Left Panel -->
+<div class="left" id="questionContainer">
+    <h1>Com Graph Prefi 4YS1 Reviewer</h1>
+    <h3>Type in your name, section and subject to view summary after submitting</h3>
+</div>
+
+<!-- Right Panel -->
+<div class="right">
+  <div id="timerContainer">
+    <svg id="timerCircle" viewBox="0 0 100 100">
+      <circle id="bgCircle" cx="50" cy="50" r="45"></circle>
+      <circle id="progressCircle" cx="50" cy="50" r="45" stroke-dasharray="282.6" stroke-dashoffset="0"></circle>
+    </svg>
+    <div id="timerText">30:00</div>
+  </div>
+
+  <input type="text" id="name" placeholder="NAME">
+  <input type="text" id="section" placeholder="SECTION">
+  <input type="text" id="subject" placeholder="SUBJECT">
+
+  <div id="bubbleWrapper">
+    <div id="bubbleCol1"></div>
+    <div id="bubbleCol2"></div>
+  </div>
+
+  <button id="submitBtn">SUBMIT</button>
+  <div id="scoreSummary"></div>
+</div>
+
+<script>
+  const questions = [
+  [
+  {
+    "question": "According to the document, what is the primary function that gameplay serves in making a game compelling?",
+    "choices": {
+      "a": "The graphical fidelity and visual effects",
+      "b": "The choices, challenges, and consequences players face",
+      "c": "The length of the game's story and cutscenes",
+      "d": "The number of available multiplayer modes"
+    },
+    "answer": "b"
+  },
+  {
+    "question": "A game's loss condition where a player loses because their character dies or runs out of vital resources is specifically categorized as what type?",
+    "choices": {
+      "a": "Implicit Loss Condition",
+      "b": "Explicit Loss Condition",
+      "c": "Spatial Challenge",
+      "d": "Zero-Sum Condition"
+    },
+    "answer": "b"
+  },
+  {
+    "question": "In which interactivity mode do players primarily engage in conversations with developers via official forums and chat rooms?",
+    "choices": {
+      "a": "Player-to-Game",
+      "b": "Player-to-Player",
+      "c": "Player-to-Developer",
+      "d": "Player-to-NPC"
+    },
+    "answer": "c"
+  },
+  {
+    "question": "The 'Prisoner's Dilemma' in game theory is used to illustrate player behavior in what specific type of situation?",
+    "choices": {
+      "a": "A cooperative Non-Zero-Sum game",
+      "b": "A strict Zero-Sum game like chess",
+      "c": "When all players compete in a Non-Zero-Sum situation",
+      "d": "A game with only Perfect Information"
+    },
+    "answer": "c"
+  },
+  {
+    "question": "What type of challenge is described as an emergent feature of the game itself, rather than being intentionally and specifically added by the designers?",
+    "choices": {
+      "a": "Explicit Challenge",
+      "b": "Logical Challenge",
+      "c": "Implicit Challenge",
+      "d": "Spatial Challenge"
+    },
+    "answer": "c"
+  },
+  {
+    "question": "Knowing that a Water-type Pokémon is strong against a Fire-type is an example of applying what kind of knowledge to the game?",
+    "choices": {
+      "a": "Intrinsic Knowledge",
+      "b": "Spatial Awareness",
+      "c": "Extrinsic Knowledge",
+      "d": "Imperfect Information"
+    },
+    "answer": "c"
+  },
+  {
+    "question": "Which game goal involves 'arranging items in a particular order, often utilizing spatial and pattern-matching strategies' and is common in games like Bejeweled?",
+    "choices": {
+      "a": "Analysis",
+      "b": "Capture",
+      "c": "Organization",
+      "d": "Solution"
+    },
+    "answer": "c"
+  },
+  {
+    "question": "For a game to be considered 'balanced,' it must provide several elements. Which of the following is NOT listed as a requirement for a balanced gameplay system?",
+    "choices": {
+      "a": "Consistent challenges",
+      "b": "A predetermined winner",
+      "c": "Lack of stagnation",
+      "d": "Perceivably fair playing experiences"
+    },
+    "answer": "b"
+  },
+  {
+    "question": "What is the primary unifying element that a level's function should center around, according to the level design principles?",
+    "choices": {
+      "a": "A graphical texture pack",
+      "b": "A central idea or theme",
+      "c": "A specific non-player character",
+      "d": "The maximum player count"
+    },
+    "answer": "b"
+  },
+  {
+    "question": "In open-world level design, what technique is suggested to prevent players from simply running past opponents without engaging them?",
+    "choices": {
+      "a": "Implementing a strict time limit",
+      "b": "Creating natural barriers destroyed as a by-product of player progress",
+      "c": "Removing all enemies from the open world",
+      "d": "Forcing the player into a series of small, locked rooms"
+    },
+    "answer": "b"
+  },
+  {
+    "question": "What is a suggested method for preventing a player from returning to a completed area, thereby signaling progress?",
+    "choices": {
+      "a": "Resetting the level entirely",
+      "b": "Creating a one-way barrier, like a locking door",
+      "c": "Making the player character lose all memory",
+      "d": "Implementing a fast-travel system"
+    },
+    "answer": "b"
+  },
+  {
+    "question": "According to the document, what is a universal rule regarding the duration of a game level?",
+    "choices": {
+      "a": "Every level must be completable in under 15 minutes.",
+      "b": "A player must be able to complete at least one level in a single session.",
+      "c": "Levels should never have save points.",
+      "d": "Each level must be longer than the one before it."
+    },
+    "answer": "b"
+  },
+  {
+    "question": "For which type of game is it recommended to have only one level available at a time to support first-person immersion?",
+    "choices": {
+      "a": "Real-Time Strategy (RTS) Games",
+      "b": "Process Simulation Games",
+      "c": "Games requiring first-person immersion",
+      "d": "Open-World Role-Playing Games"
+    },
+    "answer": "c"
+  },
+  {
+    "question": "In the context of level relationships, how are levels in most puzzle games typically connected?",
+    "choices": {
+      "a": "Through an ongoing character-driven storyline",
+      "b": "By an increase in difficulty",
+      "c": "Through a shared open world",
+      "d": "They are not connected at all."
+    },
+    "answer": "b"
+  },
+  {
+    "question": "The 'Boktai' game for Game Boy Advance is cited as an example of which type of time implementation in games?",
+    "choices": {
+      "a": "Limited Time",
+      "b": "Player-Adjusted Time",
+      "c": "Altered Time",
+      "d": "Authentic Time"
+    },
+    "answer": "d"
+  },
+  {
+    "question": "In 'FarmVille,' where a few real-world hours determine crop success, time is implemented in which way?",
+    "choices": {
+      "a": "Authentic Time",
+      "b": "Limited Time",
+      "c": "Player-Adjusted Time",
+      "d": "Altered Time"
+    },
+    "answer": "b"
+  },
+  {
+    "question": "The 'bullet time' effect, popularized by 'Max Payne,' is a prime example of what category of game time?",
+    "choices": {
+      "a": "Authentic Time",
+      "b": "Limited Time",
+      "c": "Player-Adjusted Time",
+      "d": "Altered Time"
+    },
+    "answer": "d"
+  },
+  {
+    "question": "Which perspective allows a player to look slightly across the landscape at a 30- to 45-degree angle and facilitates the use of reusable, pre-rendered objects?",
+    "choices": {
+      "a": "Omnipresent Perspective",
+      "b": "Aerial (Top-Down) Perspective",
+      "c": "Isometric Perspective",
+      "d": "Side-Scrolling Perspective"
+    },
+    "answer": "c"
+  },
+  {
+    "question": "What specific technique in 2D side-scrolling games uses multiple background layers moving at different speeds to create an illusion of depth?",
+    "choices": {
+      "a": "Isometric Projection",
+      "b": "Radiosity",
+      "c": "Parallax Scrolling",
+      "d": "Micromanagement"
+    },
+    "answer": "c"
+  },
+  {
+    "question": "What term defines how materials in a game environment behave when lit, combining attributes like texture, color, and shininess with light source attributes?",
+    "choices": {
+      "a": "Terrain Mapping",
+      "b": "A Shading Model",
+      "c": "Spatial Awareness",
+      "d": "An Implicit Challenge"
+    },
+    "answer": "b"
+  },
+  {
+    "question": "The proper application of 'Radiosity' is crucial in games primarily for what reason?",
+    "choices": {
+      "a": "To manage player resources effectively.",
+      "b": "To define the victory conditions.",
+      "c": "To allow players to navigate and see interactive details.",
+      "d": "To create implicit loss conditions."
+    },
+    "answer": "c"
+  },
+  {
+    "question": "What is a major trade-off a developer faces when adding more detail to a game's space and objects to increase realism?",
+    "choices": {
+      "a": "A loss of consistent challenges",
+      "b": "A decrease in game speed and efficiency",
+      "c": "An increase in trivial decisions",
+      "d": "The removal of all stylistic elements"
+    },
+    "answer": "b"
+  },
+  {
+    "question": "The document advises that two main style forms must work together in a game. What are they?",
+    "choices": {
+      "a": "The style of the music and the style of the sound effects.",
+      "b": "The style of the objects in the world and the style of the artwork depicting the world.",
+      "c": "The style of the interface and the style of the packaging.",
+      "d": "The style of the protagonist and the style of the antagonist."
+    },
+    "answer": "b"
+  },
+  {
+    "question": "Which game goal is described as 'getting the competition to break the rules,' often involving physical or emotional stamina?",
+    "choices": {
+      "a": "Taboo",
+      "b": "Outwit",
+      "c": "Escape",
+      "d": "Conflict"
+    },
+    "answer": "a"
+  },
+  {
+    "question": "A 'Perfect Information' challenge primarily yields what type of cognitive task for the player?",
+    "choices": {
+      "a": "Inference and guesswork",
+      "b": "Quick reflexes and reaction time",
+      "c": "Logical assimilation and decision-making",
+      "d": "Resource management and trade"
+    },
+    "answer": "c"
+  },
+  {
+    "question": "In a 'Player-to-Game' interactivity mode, who or what generates the non-player characters (NPCs) that the player interacts with?",
+    "choices": {
+      "a": "Other human players",
+      "b": "The game's developers in real-time",
+      "c": "An artificial intelligence (AI) system",
+      "d": "Pre-recorded video sequences"
+    },
+    "answer": "c"
+  },
+  {
+    "question": "What term is used for the high level of detailed resource management found in games like 'Clash of Clans'?",
+    "choices": {
+      "a": "Macromanagement",
+      "b": "Spatial Awareness",
+      "c": "Micromanagement",
+      "d": "Explicit Challenging"
+    },
+    "answer": "c"
+  },
+  {
+    "question": "Which of the following is a challenge that directly tests the speed at which a player can respond to in-game events, potentially meaning 'life or death' for their character?",
+    "choices": {
+      "a": "Resource Management",
+      "b": "Reaction Time",
+      "c": "Spatial Awareness",
+      "d": "Analysis"
+    },
+    "answer": "b"
+  },
+  {
+    "question": "The game goal 'Outwit' primarily involves applying what to defeat the competition?",
+    "choices": {
+      "a": "Superior reaction time",
+      "b": "Intrinsic or extrinsic knowledge",
+      "c": "Overwhelming numerical resources",
+      "d": "Spatial pattern recognition"
+    },
+    "answer": "b"
+  },
+  {
+    "question": "What aspect of level design is described as building conflict in a series of arcs and varying the pace between struggle, exploration, and puzzle-solving?",
+    "choices": {
+      "a": "Duration",
+      "b": "Flow",
+      "c": "Progression",
+      "d": "Availability"
+    },
+    "answer": "c"
+  },
+  {
+    "question": "In an 'Omnipresent' perspective, from where does the player typically view the game world?",
+    "choices": {
+      "a": "From a first-person viewpoint",
+      "b": "From a fixed side-on view",
+      "c": "From above, looking down",
+      "d": "Over the shoulder of the character"
+    },
+    "answer": "c"
+  },
+  {
+    "question": "What does the term 'Terrain' specifically refer to in the context of game space?",
+    "choices": {
+      "a": "The overall storyline of the game",
+      "b": "The textures that appear on ground surfaces",
+      "c": "The rules governing player movement",
+      "d": "The non-player characters inhabiting the world"
+    },
+    "answer": "b"
+  },
+  {
+    "question": "Which of the following is a key consideration for balancing a game, ensuring that players are not required to make unimportant choices?",
+    "choices": {
+      "a": "Lack of Trivial Decisions",
+      "b": "Perceivably Fair Playing Experiences",
+      "c": "Consistent Challenges",
+      "d": "Difficulty Levels"
+    },
+    "answer": "a"
+  },
+  {
+    "question": "What is the suggested maximum level duration for a hardcore computer game that requires continuous concentration?",
+    "choices": {
+      "a": "15 minutes",
+      "b": "45 minutes",
+      "c": "2 hours",
+      "d": "4 hours"
+    },
+    "answer": "c"
+  },
+  {
+    "question": "For a game level to effectively signal progression and prevent backtracking, what type of barrier is recommended?",
+    "choices": {
+      "a": "An invisible wall",
+      "b": "A one-way barrier",
+      "c": "A respawning enemy",
+      "d": "A difficult puzzle"
+    },
+    "answer": "b"
+  }
+]
+];
+
+  const questionContainer = document.getElementById("questionContainer");
+  const bubbleCol1 = document.getElementById("bubbleCol1");
+  const bubbleCol2 = document.getElementById("bubbleCol2");
+  const correctAnswers = {};
+  const totalQuestions = questions.length;
+
+  questions.forEach((q, i) => {
+    const num = i + 1;
+    correctAnswers[num] = q.answer;
+
+    const qDiv = document.createElement("div");
+    qDiv.className = "question";
+    qDiv.innerHTML = `
+      <strong>${num}. ${q.question}</strong><br>
+      <label><input type="radio" name="q${num}" value="a" onclick="markBubble(${num}, 'a')"> ${q.choices.a}</label>
+      <label><input type="radio" name="q${num}" value="b" onclick="markBubble(${num}, 'b')"> ${q.choices.b}</label>
+      <label><input type="radio" name="q${num}" value="c" onclick="markBubble(${num}, 'c')"> ${q.choices.c}</label>
+      <label><input type="radio" name="q${num}" value="d" onclick="markBubble(${num}, 'd')"> ${q.choices.d}</label>
+    `;
+    questionContainer.appendChild(qDiv);
+
+    const bubbleRow = document.createElement("div");
+    bubbleRow.className = "bubble";
+    bubbleRow.innerHTML = `
+      ${num}.
+      <span id="b${num}a"></span>
+      <span id="b${num}b"></span>
+      <span id="b${num}c"></span>
+      <span id="b${num}d"></span>
+    `;
+    (num <= 15 ? bubbleCol1 : bubbleCol2).appendChild(bubbleRow);
+  });
+
+  function markBubble(qNum, choice) {
+    ['a', 'b', 'c', 'd'].forEach(letter => {
+      const el = document.getElementById(`b${qNum}${letter}`);
+      el.classList.remove('filled');
+    });
+    const selected = document.getElementById(`b${qNum}${choice}`);
+    if (selected) selected.classList.add('filled');
+  }
+
+  // Timer Logic
+  const totalTime = 25 * 60; // 30 minutes in seconds
+  let timeLeft = totalTime;
+  const timerText = document.getElementById("timerText");
+  const progressCircle = document.getElementById("progressCircle");
+  const radius = 45;
+  const circumference = 2 * Math.PI * radius;
+  progressCircle.style.strokeDasharray = circumference;
+
+  function updateTimer() {
+    const minutes = Math.floor(timeLeft / 60);
+    const seconds = timeLeft % 60;
+    timerText.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+    const offset = circumference - (timeLeft / totalTime) * circumference;
+    progressCircle.style.strokeDashoffset = offset;
+  }
+
+  const timerInterval = setInterval(() => {
+    updateTimer();
+    if (timeLeft <= 0) {
+      clearInterval(timerInterval);
+      alert("Time is up! Submitting your quiz.");
+      document.getElementById("submitBtn").click();
+      document.getElementById("submitBtn").disabled = true;
+    }
+    timeLeft--;
+  }, 1000);
+
+  // Submit logic
+  document.getElementById("submitBtn").addEventListener("click", () => {
+    const name = document.getElementById("name").value.trim();
+    const section = document.getElementById("section").value.trim();
+    const subject = document.getElementById("subject").value.trim();
+
+    const music = document.getElementById("bg-music");
+    if (music.paused) {
+      music.play().catch(err => {
+        console.warn("Autoplay was blocked:", err);
+      });
+    }
+
+    if (!name || !section || !subject) {
+      alert("Please fill in Name, Section, and Subject.");
+      return;
+    }
+
+    let correct = 0, wrong = 0, unanswered = 0, feedback = "";
+
+    for (let i = 1; i <= totalQuestions; i++) {
+      const selected = document.querySelector(`input[name="q${i}"]:checked`);
+      if (selected) {
+        if (selected.value === correctAnswers[i]) {
+          correct++;
+        } else {
+          wrong++;
+          feedback += `❌ Q${i} (Your answer: ${selected.value}, Correct: ${correctAnswers[i]})<br>`;
+        }
+      } else {
+        unanswered++;
+        feedback += `⚠️ Q${i} was not answered (Correct: ${correctAnswers[i]})<br>`;
+      }
+    }
+
+    const summary = `
+      <p><strong>Name:</strong> ${name}</p>
+      <p><strong>Section:</strong> ${section}</p>
+      <p><strong>Subject:</strong> ${subject}</p>
+      <p><strong>Score:</strong> ${correct}/${totalQuestions}</p>
+      <p><strong>Correct:</strong> ${correct}</p>
+      <p><strong>Wrong:</strong> ${wrong}</p>
+      <p><strong>Unanswered:</strong> ${unanswered}</p>
+      <hr>
+      <div>${feedback}</div>
+    `;
+
+    document.getElementById("scoreSummary").innerHTML = summary;
+  });
+
+  updateTimer(); // Initialize timer immediately
+</script>
+
+</body>
+</html>
