@@ -504,7 +504,6 @@
     },
     "answer": "b"
   }
-]
 ];
 
   const questionContainer = document.getElementById("questionContainer");
@@ -537,7 +536,7 @@
       <span id="b${num}c"></span>
       <span id="b${num}d"></span>
     `;
-    (num <= 15 ? bubbleCol1 : bubbleCol2).appendChild(bubbleRow);
+    (num <= 18 ? bubbleCol1 : bubbleCol2).appendChild(bubbleRow);
   });
 
   function markBubble(qNum, choice) {
