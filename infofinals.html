@@ -152,8 +152,7 @@
 <script>
   // 60 questions derived from the uploaded PDF (Data Privacy, Privacy by Design, Risk, Attacks, Online Privacy, DPA 2012, etc.)
   const questions = [
-    { question: "Personal data refers to information from which the identity of an individual is apparent or can be directly ascertained.", choices: { a: "True", b: "False", c: "Only if recorded in electronic form", d: "Only if shared publicly" }, answer: "a" },
-    { question: "Which of the following is NOT listed as a primary privacy issue in the document?", choices: { a: "Accuracy", b: "Property", c: "Access", d: "Availability" }, answer: "d" },
+    
     { question: "Data security mainly focuses on:", choices: { a: "Using data responsibly", b: "Protecting the identity of subjects", c: "Preventing unauthorized access and attacks", d: "Determining ownership of data" }, answer: "c" },
     { question: "Privacy as discussed in the PDF primarily protects:", choices: { a: "Systems from malware", b: "The identity of individuals and proper use of data", c: "Hardware from theft", d: "Network bandwidth" }, answer: "b" },
     { question: "Which triad is described as guiding information security policies?", choices: { a: "CIA (Confidentiality, Integrity, Availability)", b: "PDP (Privacy, Data, Protection)", c: "AAA (Authentication, Authorization, Accounting)", d: "MVP (Monitor, Verify, Protect)" }, answer: "a" },
@@ -164,12 +163,6 @@
     { question: "Data management is described as:", choices: { a: "Only encrypting files", b: "Ingesting, storing, organizing, and maintaining data", c: "Deleting backups", d: "Providing user training" }, answer: "b" },
     { question: "Information privacy techniques include:", choices: { a: "Encryption, authentication, data masking", b: "Only firewalls", c: "Printer maintenance", d: "App store vetting only" }, answer: "a" },
     { question: "PII stands for:", choices: { a: "Private Internet Information", b: "Personally Identifiable Information", c: "Publicly Indexed Information", d: "Protected Internal Infrastructure" }, answer: "b" },
-    { question: "Which is an example of PII?", choices: { a: "IP addresses", b: "Race, religion, biometric images", c: "Both a and b", d: "None" }, answer: "c" },
-    { question: "Privacy by Design (PbD) seeks to:", choices: { a: "Add privacy features after product launch", b: "Take privacy requirements into account throughout system development", c: "Focus only on encryption", d: "Exclude business practices" }, answer: "b" },
-    { question: "A PbD principle: 'Privacy as the default' means:", choices: { a: "Users must opt-in for privacy", b: "Only necessary data is processed and protected by default", c: "Privacy is optional", d: "Privacy features are hidden" }, answer: "b" },
-    { question: "PbD's 'End-to-end security' principle refers to:", choices: { a: "Protection from collection to deletion", b: "Only securing storage", c: "Securing user passwords only", d: "Security audits once a year" }, answer: "a" },
-    { question: "PbD's 'Full functionality' principle advocates:", choices: { a: "Trade-offs between privacy and functionality", b: "Positive-sum solutions where privacy and functionality coexist", c: "Removing features to increase privacy", d: "Isolating security teams" }, answer: "b" },
-    { question: "Privacy engineering focuses on:", choices: { a: "Only documentation", b: "Implementing techniques to decrease privacy risks across lifecycle", c: "Physical security only", d: "Marketing privacy statements" }, answer: "b" },
     { question: "A privacy risk assessment's objective is to:", choices: { a: "Enable executives to set a budget for privacy and select controls", b: "Replace security assessments", c: "Reduce staff headcount", d: "Encrypt all databases" }, answer: "a" },
     { question: "Privacy controls may result in which action?", choices: { a: "Removing threat source", b: "Changing amount of PII collected", c: "Changing consequences of a privacy event", d: "Any of the above" }, answer: "d" },
     { question: "Security controls are:", choices: { a: "Only administrative policies", b: "Safeguards/countermeasures to protect confidentiality, integrity, availability", c: "User preferences", d: "Legal contracts only" }, answer: "b" },
@@ -181,7 +174,6 @@
     { question: "Vulnerability is:", choices: { a: "A safeguard", b: "A weakness that could be exploited by a threat", c: "A type of asset", d: "A privacy policy" }, answer: "b" },
     { question: "Impact is:", choices: { a: "Speed of system", b: "Magnitude of harm from unauthorized disclosure or loss", c: "Number of users", d: "A control measure" }, answer: "b" },
     { question: "Likelihood in risk terms is:", choices: { a: "Chance that a threat will inflict harm within a timeframe", b: "Severity of damage", c: "Company policy", d: "A firewall setting" }, answer: "a" },
-    { question: "Risk is:", choices: { a: "Only financial loss", b: "Measure of the extent to which an entity is threatened by a potential event", c: "Number of vulnerabilities", d: "A privacy statement" }, answer: "b" },
     { question: "Level of risk combines:", choices: { a: "Consequences and their likelihood", b: "Only consequences", c: "Only likelihood", d: "Number of assets" }, answer: "a" },
     { question: "Privacy Impact Assessment (PIA) is primarily used to:", choices: { a: "Test firewall rules", b: "Analyze how information is handled to ensure privacy compliance", c: "Hire IT staff", d: "Encrypt user files" }, answer: "b" },
     { question: "Two factors used to estimate privacy impact are:", choices: { a: "Prejudicial potential and level of identification", b: "Threat strength and speed", c: "Availability and uptime", d: "Encryption and hashing" }, answer: "a" },
@@ -203,8 +195,6 @@
     { question: "Access control provides the ability to:", choices: { a: "Limit and control access to systems and applications", b: "Replace user training", c: "Change encryption algorithms", d: "Automatically fix vulnerabilities" }, answer: "a" },
     { question: "Data confidentiality service protects against:", choices: { a: "Passive attacks", b: "Active code injection only", c: "Physical theft only", d: "User errors only" }, answer: "a" },
     { question: "Data integrity service ensures:", choices: { a: "Messages are received as sent without unauthorized modification", b: "Only encryption is used", c: "Systems are always available", d: "Users cannot login" }, answer: "a" },
-    { question: "Nonrepudiation prevents:", choices: { a: "Either sender or receiver denying a transmitted message", b: "All passive eavesdropping", c: "Data availability issues", d: "Account provisioning" }, answer: "a" },
-    { question: "Online privacy concerns include:", choices: { a: "Data collected explicitly and through cookies/tracking", b: "Only offline forms", c: "Only physical documents", d: "None" }, answer: "a" },
     { question: "Data brokers typically:", choices: { a: "Compile large amounts of personal data from multiple sources and sell profiles", b: "Only store encrypted data", c: "Are always transparent to users", d: "Never reuse data" }, answer: "a" },
     { question: "Web server security concerns include:", choices: { a: "Vulnerabilities in host platform (OS, file/db systems)", b: "Only user education", c: "Only mobile app issues", d: "None" }, answer: "a" },
     { question: "A danger with third-party app stores is:", choices: { a: "Greater certainty of apps being malware-free", b: "Uncertainty about trust and malware presence", c: "Higher quality apps", d: "Automatic vetting by OS vendor" }, answer: "b" },
