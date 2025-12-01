@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Quiz App</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      display: flex;
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+    .left {
+      width: 60%;
+      height: 100vh;
+      overflow-y: scroll;
+      padding: 20px;
+      border-right: 1px solid #ccc;
+    }
+    .right {
+      width: 40%;
+      padding: 20px;
+      position: relative;
+    }
+    .question {
+      margin-bottom: 20px;
+    }
+    .question label {
+      margin-right: 10px;
+    }
+    .bubble {
+      display: flex;
+      align-items: center;
+      margin-bottom: 5px;
+    }
+    .bubble span {
+      display: inline-block;
+      width: 14px;
+      height: 14px;
+      border: 1px solid black;
+      border-radius: 50%;
+      margin: 0 3px;
+    }
+    .filled {
+      background-color: black;
+    }
+    #bubbleWrapper {
+      display: flex;
+      justify-content: center;  /* center the columns horizontally */
+      gap: 30px;
+      margin: 20px 0;
+    }
+    input[type="text"] {
+      width: 100%;
+      margin-bottom: 10px;
+      padding: 5px;
+    }
+    #submitBtn {
+      display: block;
+      margin: 20px auto; /* auto margins center it horizontally */
+      padding: 10px 20px;
+      background-color: green;
+      color: white;
+      font-size: 16px;
+      border: none;
+      cursor: pointer;
+    }
+    #scoreSummary {
+      margin-top: 20px;
+      font-weight: bold;
+    }
+    /* Timer Styles */
+    #timerContainer {
+      width: 120px;
+      height: 120px;
+      margin: 0 auto 20px;
+      position: relative;
+    }
+    #timerCircle {
+      width: 100%;
+      height: 100%;
+      transform: rotate(-90deg);
+    }
+    #timerCircle circle {
+      fill: none;
+      stroke-width: 10;
+    }
+    #bgCircle {
+      stroke: #eee;
+    }
+    #progressCircle {
+      stroke: red;
+      stroke-linecap: round;
+      transition: stroke-dashoffset 1s linear;
+    }
+    #timerText {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-weight: bold;
+      font-size: 18px;
+      color: red;
+    }
+    #bubbleCol1, #bubbleCol2 {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+  </style>
+</head>
+<body>
+
+<!-- Background Music -->
+<audio id="bg-music" loop>
+  <source src="congrats.mp3" type="audio/mpeg">
+  Your browser does not support the audio element.
+</audio>
+
+<!-- Left Panel -->
+<div class="left" id="questionContainer">
+    <h1>Info Assurance Prefi 4YS1 Reviewer</h1>
+    <h3>Type in your name, section and subject to view summary after submitting</h3>
+</div>
+
+<!-- Right Panel -->
+<div class="right">
+  <div id="timerContainer">
+    <svg id="timerCircle" viewBox="0 0 100 100">
+      <circle id="bgCircle" cx="50" cy="50" r="45"></circle>
+      <circle id="progressCircle" cx="50" cy="50" r="45" stroke-dasharray="282.6" stroke-dashoffset="0"></circle>
+    </svg>
+    <div id="timerText">60:00</div>
+  </div>
+
+  <input type="text" id="name" placeholder="NAME">
+  <input type="text" id="section" placeholder="SECTION">
+  <input type="text" id="subject" placeholder="SUBJECT">
+
+  <div id="bubbleWrapper">
+    <div id="bubbleCol1"></div>
+    <div id="bubbleCol2"></div>
+  </div>
+
+  <button id="submitBtn">SUBMIT</button>
+  <div id="scoreSummary"></div>
+</div>
+
+<script>
+  // 60 questions derived from the uploaded PDF (Data Privacy, Privacy by Design, Risk, Attacks, Online Privacy, DPA 2012, etc.)
+  const questions = [
+    { question: "Personal data refers to information from which the identity of an individual is apparent or can be directly ascertained.", choices: { a: "True", b: "False", c: "Only if recorded in electronic form", d: "Only if shared publicly" }, answer: "a" },
+    { question: "Which of the following is NOT listed as a primary privacy issue in the document?", choices: { a: "Accuracy", b: "Property", c: "Access", d: "Availability" }, answer: "d" },
+    { question: "Data security mainly focuses on:", choices: { a: "Using data responsibly", b: "Protecting the identity of subjects", c: "Preventing unauthorized access and attacks", d: "Determining ownership of data" }, answer: "c" },
+    { question: "Privacy as discussed in the PDF primarily protects:", choices: { a: "Systems from malware", b: "The identity of individuals and proper use of data", c: "Hardware from theft", d: "Network bandwidth" }, answer: "b" },
+    { question: "Which triad is described as guiding information security policies?", choices: { a: "CIA (Confidentiality, Integrity, Availability)", b: "PDP (Privacy, Data, Protection)", c: "AAA (Authentication, Authorization, Accounting)", d: "MVP (Monitor, Verify, Protect)" }, answer: "a" },
+    { question: "Which element ensures data is accessed only by authorized individuals?", choices: { a: "Availability", b: "Confidentiality", c: "Integrity", d: "Authenticity" }, answer: "b" },
+    { question: "Integrity in the CIA triad means:", choices: { a: "Data is encrypted", b: "Data is accurate and reliable", c: "Data is publicly accessible", d: "Data ownership is clear" }, answer: "b" },
+    { question: "Availability ensures:", choices: { a: "Data is only readable", b: "Systems are accessible and usable when needed", c: "Data is immutable", d: "Data is anonymized" }, answer: "b" },
+    { question: "Which of the following is part of data privacy elements?", choices: { a: "Right to be left alone", b: "Only technical encryption", c: "Server uptime", d: "Network topology" }, answer: "a" },
+    { question: "Data management is described as:", choices: { a: "Only encrypting files", b: "Ingesting, storing, organizing, and maintaining data", c: "Deleting backups", d: "Providing user training" }, answer: "b" },
+    { question: "Information privacy techniques include:", choices: { a: "Encryption, authentication, data masking", b: "Only firewalls", c: "Printer maintenance", d: "App store vetting only" }, answer: "a" },
+    { question: "PII stands for:", choices: { a: "Private Internet Information", b: "Personally Identifiable Information", c: "Publicly Indexed Information", d: "Protected Internal Infrastructure" }, answer: "b" },
+    { question: "Which is an example of PII?", choices: { a: "IP addresses", b: "Race, religion, biometric images", c: "Both a and b", d: "None" }, answer: "c" },
+    { question: "Privacy by Design (PbD) seeks to:", choices: { a: "Add privacy features after product launch", b: "Take privacy requirements into account throughout system development", c: "Focus only on encryption", d: "Exclude business practices" }, answer: "b" },
+    { question: "A PbD principle: 'Privacy as the default' means:", choices: { a: "Users must opt-in for privacy", b: "Only necessary data is processed and protected by default", c: "Privacy is optional", d: "Privacy features are hidden" }, answer: "b" },
+    { question: "PbD's 'End-to-end security' principle refers to:", choices: { a: "Protection from collection to deletion", b: "Only securing storage", c: "Securing user passwords only", d: "Security audits once a year" }, answer: "a" },
+    { question: "PbD's 'Full functionality' principle advocates:", choices: { a: "Trade-offs between privacy and functionality", b: "Positive-sum solutions where privacy and functionality coexist", c: "Removing features to increase privacy", d: "Isolating security teams" }, answer: "b" },
+    { question: "Privacy engineering focuses on:", choices: { a: "Only documentation", b: "Implementing techniques to decrease privacy risks across lifecycle", c: "Physical security only", d: "Marketing privacy statements" }, answer: "b" },
+    { question: "A privacy risk assessment's objective is to:", choices: { a: "Enable executives to set a budget for privacy and select controls", b: "Replace security assessments", c: "Reduce staff headcount", d: "Encrypt all databases" }, answer: "a" },
+    { question: "Privacy controls may result in which action?", choices: { a: "Removing threat source", b: "Changing amount of PII collected", c: "Changing consequences of a privacy event", d: "Any of the above" }, answer: "d" },
+    { question: "Security controls are:", choices: { a: "Only administrative policies", b: "Safeguards/countermeasures to protect confidentiality, integrity, availability", c: "User preferences", d: "Legal contracts only" }, answer: "b" },
+    { question: "Which best defines 'asset' in risk assessment?", choices: { a: "An item of value supporting organizational objectives", b: "A malicious actor", c: "A security patch", d: "A log file" }, answer: "a" },
+    { question: "A 'threat' is:", choices: { a: "A safeguard", b: "Any circumstance or event that can harm operations or assets", c: "Only natural disasters", d: "User error only" }, answer: "b" },
+    { question: "Threat severity is:", choices: { a: "How often threats occur", b: "Magnitude of potential cost from a threat event", c: "Number of assets", d: "Type of encryption" }, answer: "b" },
+    { question: "Threat strength (capability) refers to:", choices: { a: "Probability a system will crash", b: "Probable level of force threat agent can apply against an asset", c: "Number of staff", d: "Network speed" }, answer: "b" },
+    { question: "Threat event frequency means:", choices: { a: "Storage frequency of logs", b: "Probable frequency that a threat agent will act against an asset", c: "How many users login", d: "Backup frequency" }, answer: "b" },
+    { question: "Vulnerability is:", choices: { a: "A safeguard", b: "A weakness that could be exploited by a threat", c: "A type of asset", d: "A privacy policy" }, answer: "b" },
+    { question: "Impact is:", choices: { a: "Speed of system", b: "Magnitude of harm from unauthorized disclosure or loss", c: "Number of users", d: "A control measure" }, answer: "b" },
+    { question: "Likelihood in risk terms is:", choices: { a: "Chance that a threat will inflict harm within a timeframe", b: "Severity of damage", c: "Company policy", d: "A firewall setting" }, answer: "a" },
+    { question: "Risk is:", choices: { a: "Only financial loss", b: "Measure of the extent to which an entity is threatened by a potential event", c: "Number of vulnerabilities", d: "A privacy statement" }, answer: "b" },
+    { question: "Level of risk combines:", choices: { a: "Consequences and their likelihood", b: "Only consequences", c: "Only likelihood", d: "Number of assets" }, answer: "a" },
+    { question: "Privacy Impact Assessment (PIA) is primarily used to:", choices: { a: "Test firewall rules", b: "Analyze how information is handled to ensure privacy compliance", c: "Hire IT staff", d: "Encrypt user files" }, answer: "b" },
+    { question: "Two factors used to estimate privacy impact are:", choices: { a: "Prejudicial potential and level of identification", b: "Threat strength and speed", c: "Availability and uptime", d: "Encryption and hashing" }, answer: "a" },
+    { question: "Prejudicial potential refers to:", choices: { a: "How easily subjects can be identified", b: "Estimate of damage caused by consequences of a threat", c: "A security control", d: "An encryption algorithm" }, answer: "b" },
+    { question: "Level of identification estimates:", choices: { a: "How easy to identify data subjects from available data", b: "How many employees process data", c: "System integrity", d: "Network topology" }, answer: "a" },
+    { question: "Privacy awareness, training, and education programs aim to:", choices: { a: "Replace IT security measures", b: "Ensure employees understand and uphold information privacy responsibilities", c: "Focus only on executives", d: "Limit access to internet" }, answer: "b" },
+    { question: "Privacy culture is:", choices: { a: "Extent staff demonstrate expected privacy behavior", b: "Only the policies in a handbook", c: "Encryption keys management", d: "System performance" }, answer: "a" },
+    { question: "In the learning continuum 'Awareness' level is intended to:", choices: { a: "Explain and promote security to the workforce", b: "Provide certification", c: "Create role-based scripts", d: "Implement encryption" }, answer: "a" },
+    { question: "Cybersecurity essentials in the continuum provide:", choices: { a: "Foundational secure practices for employees involved with IT", b: "Only legal requirements", c: "Hardware repair training", d: "Only for managers" }, answer: "a" },
+    { question: "Role-based training focuses on:", choices: { a: "Knowledge specific to an individual's role", b: "General privacy awareness only", c: "Only executive-level topics", d: "Physical security only" }, answer: "a" },
+    { question: "Education/certification stage integrates:", choices: { a: "All security skills into a common body of knowledge", b: "Only theory", c: "Only software skills", d: "Only networking" }, answer: "a" },
+    { question: "Which of the following is NOT a passive attack?", choices: { a: "Release of message contents", b: "Traffic analysis", c: "Denial of service", d: "Eavesdropping" }, answer: "c" },
+    { question: "Passive attacks are difficult to detect because they:", choices: { a: "Involve data alteration", b: "Do not alter data, only observe", c: "Require physical presence", d: "Only affect hardware" }, answer: "b" },
+    { question: "An active attack example is:", choices: { a: "Traffic analysis", b: "Eavesdropping", c: "Data modification", d: "Passive monitoring" }, answer: "c" },
+    { question: "Masquerade attack involves:", choices: { a: "Pretending to be another entity", b: "Only listening to traffic", c: "Hardware theft", d: "Encrypting data" }, answer: "a" },
+    { question: "Replay attack is:", choices: { a: "Passive capture and retransmission to produce unauthorized effect", b: "A firewall rule", c: "A vulnerability scanner", d: "Encryption method" }, answer: "a" },
+    { question: "Denial-of-service attack aims to:", choices: { a: "Improve availability", b: "Prevent normal use of communication facilities", c: "Encrypt messages", d: "Authenticate users" }, answer: "b" },
+    { question: "Authentication service ensures:", choices: { a: "Confidentiality only", b: "That communication is genuine and from claimed source", c: "Availability of servers", d: "Only nonrepudiation" }, answer: "b" },
+    { question: "Access control provides the ability to:", choices: { a: "Limit and control access to systems and applications", b: "Replace user training", c: "Change encryption algorithms", d: "Automatically fix vulnerabilities" }, answer: "a" },
+    { question: "Data confidentiality service protects against:", choices: { a: "Passive attacks", b: "Active code injection only", c: "Physical theft only", d: "User errors only" }, answer: "a" },
+    { question: "Data integrity service ensures:", choices: { a: "Messages are received as sent without unauthorized modification", b: "Only encryption is used", c: "Systems are always available", d: "Users cannot login" }, answer: "a" },
+    { question: "Nonrepudiation prevents:", choices: { a: "Either sender or receiver denying a transmitted message", b: "All passive eavesdropping", c: "Data availability issues", d: "Account provisioning" }, answer: "a" },
+    { question: "Online privacy concerns include:", choices: { a: "Data collected explicitly and through cookies/tracking", b: "Only offline forms", c: "Only physical documents", d: "None" }, answer: "a" },
+    { question: "Data brokers typically:", choices: { a: "Compile large amounts of personal data from multiple sources and sell profiles", b: "Only store encrypted data", c: "Are always transparent to users", d: "Never reuse data" }, answer: "a" },
+    { question: "Web server security concerns include:", choices: { a: "Vulnerabilities in host platform (OS, file/db systems)", b: "Only user education", c: "Only mobile app issues", d: "None" }, answer: "a" },
+    { question: "A danger with third-party app stores is:", choices: { a: "Greater certainty of apps being malware-free", b: "Uncertainty about trust and malware presence", c: "Higher quality apps", d: "Automatic vetting by OS vendor" }, answer: "b" },
+    { question: "Mobile app vetting process usually includes:", choices: { a: "App submission, testing, analysis, auditing, approval/rejection", b: "Only user reviews", c: "Only automatic approval", d: "No testing" }, answer: "a" },
+    { question: "A common mobile threat is:", choices: { a: "Insecure network communication", b: "Perfect app updates", c: "Guaranteed secure third-party libraries", d: "None" }, answer: "a" },
+    { question: "Vulnerabilities in third-party libraries can:", choices: { a: "Introduce vulnerabilities into many apps", b: "Always be detected automatically", c: "Only affect one app", d: "Never be exploited" }, answer: "a" },
+    { question: "The Philippine Data Privacy Act (RA 10173) was passed in:", choices: { a: "2012", b: "2018", c: "2005", d: "1999" }, answer: "a" },
+    { question: "Under the DPA, the National Privacy Commission (NPC) can:", choices: { a: "Monitor and ensure compliance, receive complaints, issue orders", b: "Only give advice", c: "Only audit banks", d: "Never impose penalties" }, answer: "a" },
+    { question: "Data controller vs data processor: the controller:", choices: { a: "Decides purposes and means of processing", b: "Only stores data for the controller", c: "Is always a government agency", d: "Has no responsibilities" }, answer: "a" },
+    { question: "Sharing personal data for commercial purpose requires:", choices: { a: "No agreement", b: "A data-sharing agreement and consent", c: "Only controller approval", d: "Automatic sharing" }, answer: "b" },
+    { question: "Consent under the DPA means:", choices: { a: "Any freely given, specific, informed indication of will", b: "Implicit agreement always", c: "No record needed", d: "Only verbal approval" }, answer: "a" },
+    { question: "Penalties under the Data Privacy Law may include:", choices: { a: "Minimum 1 year to max 7 years imprisonment and fines Php1M–Php7M", b: "Only warnings", c: "No enforcement", d: "Only civil fines" }, answer: "a" },
+    { question: "Unauthorized processing of personal information can result in:", choices: { a: "Penalties and possible prosecution under DPA", b: "No consequences", c: "Automatic data deletion only", d: "Only internal memo" }, answer: "a" },
+    { question: "Outsourcing processing requires the controller to:", choices: { a: "Ensure contractual safeguards to maintain confidentiality, integrity, availability", b: "Transfer full responsibility without controls", c: "Never monitor processors", d: "Allow unlimited sharing" }, answer: "a" },
+    { question: "Which is part of web application privacy risks (OWASP-like)?", choices: { a: "User-side data leakage", b: "Perfect session expiration", c: "Automatic anonymization", d: "No risks" }, answer: "a" },
+    { question: "Insufficient deletion of personal data refers to:", choices: { a: "Failing to delete personal data timely after purpose termination", b: "Encrypting all data", c: "Backing up data", d: "None" }, answer: "a" },
+    { question: "Missing or insufficient session expiration may result in:", choices: { a: "Unauthorized collection of additional data or leakage", b: "Improved privacy", c: "Faster performance", d: "Better authentication" }, answer: "a" },
+    { question: "Insecure data transfer risk is mitigated by:", choices: { a: "Using encrypted and secured channels", b: "Sending plain text over HTTP", c: "Disabling encryption", d: "Using weak ciphers" }, answer: "a" }
+  ];
+
+  const questionContainer = document.getElementById("questionContainer");
+  const bubbleCol1 = document.getElementById("bubbleCol1");
+  const bubbleCol2 = document.getElementById("bubbleCol2");
+  const correctAnswers = {};
+  const totalQuestions = questions.length;
+
+  // Generate question elements and bubbles
+  questions.forEach((q, i) => {
+    const num = i + 1;
+    correctAnswers[num] = q.answer;
+
+    const qDiv = document.createElement("div");
+    qDiv.className = "question";
+    qDiv.innerHTML = `
+      <strong>${num}. ${q.question}</strong><br>
+      <label><input type="radio" name="q${num}" value="a" onclick="markBubble(${num}, 'a')"> ${q.choices.a}</label>
+      <label><input type="radio" name="q${num}" value="b" onclick="markBubble(${num}, 'b')"> ${q.choices.b}</label>
+      <label><input type="radio" name="q${num}" value="c" onclick="markBubble(${num}, 'c')"> ${q.choices.c}</label>
+      <label><input type="radio" name="q${num}" value="d" onclick="markBubble(${num}, 'd')"> ${q.choices.d}</label>
+    `;
+    questionContainer.appendChild(qDiv);
+
+    const bubbleRow = document.createElement("div");
+    bubbleRow.className = "bubble";
+    bubbleRow.innerHTML = `
+      ${num}.
+      <span id="b${num}a"></span>
+      <span id="b${num}b"></span>
+      <span id="b${num}c"></span>
+      <span id="b${num}d"></span>
+    `;
+    // split into 30 and 30
+    (num <= 30 ? bubbleCol1 : bubbleCol2).appendChild(bubbleRow);
+  });
+
+  function markBubble(qNum, choice) {
+    ['a', 'b', 'c', 'd'].forEach(letter => {
+      const el = document.getElementById(`b${qNum}${letter}`);
+      if (el) el.classList.remove('filled');
+    });
+    const selected = document.getElementById(`b${qNum}${choice}`);
+    if (selected) selected.classList.add('filled');
+  }
+
+  // Timer Logic
+  const totalTime = 60 * 60; // 60 minutes in seconds
+  let timeLeft = totalTime;
+  const timerText = document.getElementById("timerText");
+  const progressCircle = document.getElementById("progressCircle");
+  const radius = 45;
+  const circumference = 2 * Math.PI * radius;
+  progressCircle.style.strokeDasharray = circumference;
+
+  function updateTimer() {
+    const minutes = Math.floor(timeLeft / 60);
+    const seconds = timeLeft % 60;
+    timerText.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+    const offset = circumference - (timeLeft / totalTime) * circumference;
+    progressCircle.style.strokeDashoffset = offset;
+  }
+
+  const timerInterval = setInterval(() => {
+    updateTimer();
+    if (timeLeft <= 0) {
+      clearInterval(timerInterval);
+      alert("Time is up! Submitting your quiz.");
+      document.getElementById("submitBtn").click();
+      document.getElementById("submitBtn").disabled = true;
+    }
+    timeLeft--;
+  }, 1000);
+
+  // Submit logic
+  document.getElementById("submitBtn").addEventListener("click", () => {
+    const name = document.getElementById("name").value.trim();
+    const section = document.getElementById("section").value.trim();
+    const subject = document.getElementById("subject").value.trim();
+
+    const music = document.getElementById("bg-music");
+    if (music.paused) {
+      music.play().catch(err => {
+        console.warn("Autoplay was blocked:", err);
+      });
+    }
+
+    if (!name || !section || !subject) {
+      alert("Please fill in Name, Section, and Subject.");
+      return;
+    }
+
+    let correct = 0, wrong = 0, unanswered = 0, feedback = "";
+
+    for (let i = 1; i <= totalQuestions; i++) {
+      const selected = document.querySelector(`input[name="q${i}"]:checked`);
+      if (selected) {
+        if (selected.value === correctAnswers[i]) {
+          correct++;
+        } else {
+          wrong++;
+          feedback += `❌ Q${i} (Your answer: ${selected.value}, Correct: ${correctAnswers[i]})<br>`;
+        }
+      } else {
+        unanswered++;
+        feedback += `⚠️ Q${i} was not answered (Correct: ${correctAnswers[i]})<br>`;
+      }
+    }
+
+    const summary = `
+      <p><strong>Name:</strong> ${name}</p>
+      <p><strong>Section:</strong> ${section}</p>
+      <p><strong>Subject:</strong> ${subject}</p>
+      <p><strong>Score:</strong> ${correct}/${totalQuestions}</p>
+      <p><strong>Correct:</strong> ${correct}</p>
+      <p><strong>Wrong:</strong> ${wrong}</p>
+      <p><strong>Unanswered:</strong> ${unanswered}</p>
+      <hr>
+      <div>${feedback}</div>
+    `;
+
+    document.getElementById("scoreSummary").innerHTML = summary;
+  });
+
+  updateTimer(); // Initialize timer immediately
+</script>
+
+</body>
+</html>
